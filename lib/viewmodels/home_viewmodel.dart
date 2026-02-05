@@ -31,10 +31,8 @@ class HomeViewModel extends BaseViewModel {
 
   // 导航菜单项
   final List<NavItem> navItems = [
-    NavItem(icon: 0xe88a, label: '首页', tooltip: '应用首页'),
-    NavItem(icon: 0xe8b8, label: '工具', tooltip: '工具箱'),
+    NavItem(icon: 0xe8b8, label: '图片拷贝', tooltip: '图片拷贝工具'),
     NavItem(icon: 0xe8f9, label: '设置', tooltip: '应用设置'),
-    NavItem(icon: 0xe88f, label: '关于', tooltip: '关于应用'),
   ];
 
   StreamSubscription? _windowStateSubscription;
@@ -115,15 +113,11 @@ class HomeViewModel extends BaseViewModel {
   String getPageTitle(int index) {
     switch (index) {
       case 0:
-        return '首页';
+        return '图片拷贝';
       case 1:
-        return '工具箱';
-      case 2:
         return '设置';
-      case 3:
-        return '关于';
       default:
-        return '首页';
+        return '图片拷贝';
     }
   }
 

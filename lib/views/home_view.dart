@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/constants/app_constants.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/image_copy_viewmodel.dart';
 import 'widgets/window_title_bar.dart';
 import 'tools/image_copy_page.dart' as tools;
 
@@ -93,12 +94,6 @@ class _HomeViewContent extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          // 透明度调节
-          _OpacitySlider(
-            value: viewModel.opacitySliderValue,
-            onChanged: viewModel.setWindowOpacity,
-          ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -147,7 +142,7 @@ class _HomeViewContent extends StatelessWidget {
           ),
           // 页面内容
           Expanded(
-            child: _buildPageContent(viewModel.selectedIndex),
+            child: _buildPageContent(viewModel.selectedIndex, viewModel),
           ),
         ],
       ),
@@ -155,18 +150,20 @@ class _HomeViewContent extends StatelessWidget {
   }
 
   /// 根据索引构建页面内容
-  Widget _buildPageContent(int index) {
+  Widget _buildPageContent(int index, HomeViewModel viewModel) {
     switch (index) {
       case 0:
-        return const _HomePageContent();
+        return ChangeNotifierProvider(
+          create: (_) => ImageCopyViewModel(),
+          child: const tools.ImageCopyPageContent(),
+        );
       case 1:
-        return const _ToolsPageContent();
-      case 2:
-        return const _SettingsPageContent();
-      case 3:
-        return const _AboutPageContent();
+        return _SettingsPageContent(viewModel: viewModel);
       default:
-        return const _HomePageContent();
+        return ChangeNotifierProvider(
+          create: (_) => ImageCopyViewModel(),
+          child: const tools.ImageCopyPageContent(),
+        );
     }
   }
 }
@@ -233,52 +230,6 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-/// 透明度滑块组件
-class _OpacitySlider extends StatelessWidget {
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  const _OpacitySlider({
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Tooltip(
-      message: '窗口透明度: ${(value * 100).toInt()}%',
-      child: Container(
-        width: 48,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: RotatedBox(
-          quarterTurns: 3,
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              thumbShape: const RoundSliderThumbShape(
-                enabledThumbRadius: 6,
-              ),
-              overlayShape: const RoundSliderOverlayShape(
-                overlayRadius: 12,
-              ),
-            ),
-            child: Slider(
-              value: value,
-              min: 0.3,
-              max: 1.0,
-              onChanged: onChanged,
-              activeColor: colorScheme.primary,
-              inactiveColor: colorScheme.outline.withAlpha(50),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 状态徽章组件
 class _StatusBadge extends StatelessWidget {
   final IconData icon;
@@ -320,321 +271,14 @@ class _StatusBadge extends StatelessWidget {
 
 // ==================== 页面内容组件 ====================
 
-/// 首页内容
-class _HomePageContent extends StatelessWidget {
-  const _HomePageContent();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 欢迎卡片
-          Card(
-            elevation: 0,
-            color: colorScheme.primaryContainer,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.desktop_windows,
-                    size: 48,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '欢迎使用 SHX Toolkit',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '这是一个基于 MVVM 架构的 Flutter 桌面应用示例，集成了 window_manager 进行窗口管理。',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer.withAlpha(204),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // 功能特性
-          Text(
-            '功能特性',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _FeatureCard(
-                icon: Icons.window,
-                title: '窗口管理',
-                description: '支持最大化、最小化、全屏、置顶等操作',
-                color: colorScheme.primary,
-              ),
-              _FeatureCard(
-                icon: Icons.opacity,
-                title: '透明调节',
-                description: '可自由调节窗口透明度',
-                color: colorScheme.secondary,
-              ),
-              _FeatureCard(
-                icon: Icons.drag_indicator,
-                title: '自定义标题栏',
-                description: '自定义样式的窗口标题栏',
-                color: colorScheme.tertiary,
-              ),
-              _FeatureCard(
-                icon: Icons.architecture,
-                title: 'MVVM 架构',
-                description: '清晰的分层架构设计',
-                color: colorScheme.error,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 特性卡片
-class _FeatureCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withAlpha(50),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withAlpha(50),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha(153),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 工具箱页面
-class _ToolsPageContent extends StatelessWidget {
-  const _ToolsPageContent();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 页面标题
-          Text(
-            '实用工具',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '选择下面的工具开始使用',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurface.withAlpha(153),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // 工具列表
-          Wrap(
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              _ToolCard(
-                icon: Icons.copy,
-                title: '图片拷贝',
-                description: '递归扫描目录中的所有图片文件，并复制到指定目录',
-                color: colorScheme.primary,
-                onTap: () => _openImageCopyTool(context),
-              ),
-              // 可以在这里添加更多工具卡片
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 打开图片拷贝工具
-  void _openImageCopyTool(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Dialog(
-        insetPadding: EdgeInsets.all(24),
-        child: SizedBox(
-          width: 900,
-          height: 700,
-          child: tools.ImageCopyPage(),
-        ),
-      ),
-    );
-  }
-}
-
-/// 工具卡片
-class _ToolCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ToolCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
-    return Card(
-      elevation: 0,
-      color: color.withAlpha(20),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withAlpha(50)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 320,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(50),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha(153),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    '开始使用',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 16, color: color),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 设置页面
 class _SettingsPageContent extends StatelessWidget {
-  const _SettingsPageContent();
+  final HomeViewModel viewModel;
+
+  const _SettingsPageContent({required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -692,6 +336,68 @@ class _SettingsPageContent extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          // 外观设置
+          Card(
+            elevation: 0,
+            color: colorScheme.surfaceContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '外观',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // 透明度设置
+                  Row(
+                    children: [
+                      Icon(Icons.opacity, color: colorScheme.primary),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '窗口透明度',
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                            Text(
+                              '调整窗口的透明程度',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withAlpha(153),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Text('30%'),
+                      Expanded(
+                        child: Slider(
+                          value: viewModel.opacitySliderValue,
+                          min: 0.3,
+                          max: 1.0,
+                          divisions: 14,
+                          label: '${(viewModel.opacitySliderValue * 100).toInt()}%',
+                          onChanged: viewModel.setWindowOpacity,
+                        ),
+                      ),
+                      const Text('100%'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -730,106 +436,3 @@ class _SettingTile extends StatelessWidget {
   }
 }
 
-/// 关于页面
-class _AboutPageContent extends StatelessWidget {
-  const _AboutPageContent();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 应用图标
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.apps,
-                size: 40,
-                color: colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppConstants.appName,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '版本 ${AppConstants.appVersion}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface.withAlpha(153),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '一款基于 Flutter 和 window_manager 构建的桌面应用，'
-              '采用 MVVM 架构设计，提供流畅的用户体验。',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface.withAlpha(204),
-              ),
-            ),
-            const SizedBox(height: 32),
-            // 技术栈
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                _TechChip(label: 'Flutter', color: colorScheme.primary),
-                _TechChip(label: 'Dart', color: colorScheme.secondary),
-                _TechChip(label: 'window_manager', color: colorScheme.tertiary),
-                _TechChip(label: 'MVVM', color: colorScheme.error),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 技术标签
-class _TechChip extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _TechChip({
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withAlpha(25),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withAlpha(76)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 12,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-}

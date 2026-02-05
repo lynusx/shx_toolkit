@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/router/app_router.dart';
 import '../../models/image_copy_task.dart';
 import '../../viewmodels/image_copy_viewmodel.dart';
-import '../widgets/window_title_bar.dart';
-import '../../core/constants/app_constants.dart';
 
 /// 图片拷贝工具页面
+/// 
+/// 独立页面形式，通过 go_router 导航
 class ImageCopyPage extends StatelessWidget {
   const ImageCopyPage({super.key});
 
@@ -13,13 +15,14 @@ class ImageCopyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ImageCopyViewModel(),
-      child: const _ImageCopyPageContent(),
+      child: const _ImageCopyPageScaffold(),
     );
   }
 }
 
-class _ImageCopyPageContent extends StatelessWidget {
-  const _ImageCopyPageContent();
+/// 带 AppBar 的独立页面版本
+class _ImageCopyPageScaffold extends StatelessWidget {
+  const _ImageCopyPageScaffold();
 
   @override
   Widget build(BuildContext context) {
@@ -28,44 +31,63 @@ class _ImageCopyPageContent extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
-      body: Column(
-        children: [
-          // 自定义标题栏
-          WindowTitleBar(
-            title: '${AppConstants.appName} - 图片拷贝',
-            isMaximized: false,
-            isAlwaysOnTop: false,
-            onMinimize: () {},
-            onMaximize: () {},
-            onClose: () => Navigator.of(context).pop(),
-            onStartDrag: () {},
-          ),
-          // 主内容
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 页面标题
-                  _buildHeader(context),
-                  const SizedBox(height: 24),
-                  // 目录选择区域
-                  _buildDirectorySelection(context, viewModel),
-                  const SizedBox(height: 24),
-                  // 操作按钮
-                  _buildActionButtons(context, viewModel),
-                  const SizedBox(height: 24),
-                  // 进度和结果
-                  if (viewModel.isRunning || 
-                      viewModel.hasCompleted || 
-                      viewModel.hasError || 
-                      viewModel.task.images.isNotEmpty)
-                    _buildProgressSection(context, viewModel),
-                ],
-              ),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Icon(Icons.copy, color: colorScheme.primary),
+            const SizedBox(width: 12),
+            const Text('图片拷贝'),
+          ],
+        ),
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(AppRouter.home),
+        ),
+        actions: [
+          // 重置按钮
+          if (viewModel.task.images.isNotEmpty || viewModel.hasCompleted)
+            TextButton.icon(
+              onPressed: viewModel.resetTask,
+              icon: const Icon(Icons.refresh, size: 20),
+              label: const Text('重置'),
             ),
-          ),
+        ],
+      ),
+      body: const ImageCopyPageContent(),
+    );
+  }
+}
+
+/// 图片拷贝页面内容（可嵌入使用）
+class ImageCopyPageContent extends StatelessWidget {
+  const ImageCopyPageContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<ImageCopyViewModel>();
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 页面说明
+          _buildHeader(context),
+          const SizedBox(height: 24),
+          // 目录选择区域
+          _buildDirectorySelection(context, viewModel),
+          const SizedBox(height: 24),
+          // 操作按钮
+          _buildActionButtons(context, viewModel),
+          const SizedBox(height: 24),
+          // 进度和结果
+          if (viewModel.isRunning || 
+              viewModel.hasCompleted || 
+              viewModel.hasError || 
+              viewModel.task.images.isNotEmpty)
+            _buildProgressSection(context, viewModel),
         ],
       ),
     );
@@ -75,50 +97,59 @@ class _ImageCopyPageContent extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.primaryContainer.withAlpha(50),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              Icons.copy,
-              size: 32,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
             Text(
-              '图片拷贝工具',
-              style: theme.textTheme.headlineSmall?.copyWith(
+              '使用说明',
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              '1. 选择源目录 - 将要扫描的目录\n'
+              '2. 点击"开始扫描" - 扫描所有子目录中的图片\n'
+              '3. 选择目标目录 - 图片保存的位置\n'
+              '4. 点击"开始复制" - 将图片复制到目标目录',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withAlpha(153),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 支持的格式
+            Text(
+              '支持的格式：',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: ImageExtensions.all.map((ext) {
+                return Chip(
+                  label: Text(
+                    ext,
+                    style: const TextStyle(fontSize: 10),
+                  ),
+                  padding: EdgeInsets.zero,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: VisualDensity.compact,
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  side: BorderSide.none,
+                );
+              }).toList(),
+            ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          '选择一个目录，递归扫描所有子目录中的图片文件，并复制到指定目录。',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurface.withAlpha(153),
-          ),
-        ),
-        const SizedBox(height: 8),
-        // 支持的格式
-        Wrap(
-          spacing: 8,
-          children: ImageExtensions.all.map((ext) {
-            return Chip(
-              label: Text(
-                ext,
-                style: const TextStyle(fontSize: 11),
-              ),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              side: BorderSide.none,
-            );
-          }).toList(),
-        ),
-      ],
+      ),
     );
   }
 
@@ -139,12 +170,13 @@ class _ImageCopyPageContent extends StatelessWidget {
         // 目标目录选择
         _DirectorySelector(
           label: '目标目录',
-          hint: '选择图片保存的目录',
+          hint: '选择图片保存的目录（可在扫描后选择）',
           path: viewModel.task.targetDir,
           onSelect: viewModel.selectTargetDirectory,
           onClear: viewModel.clearTargetDir,
           onCreateNew: () => _showCreateFolderDialog(context, viewModel),
           icon: Icons.drive_file_move,
+          allowEmpty: true,
         ),
       ],
     );
@@ -154,143 +186,79 @@ class _ImageCopyPageContent extends StatelessWidget {
   Widget _buildActionButtons(BuildContext context, ImageCopyViewModel viewModel) {
     final colorScheme = Theme.of(context).colorScheme;
     
-    return Wrap(
-      spacing: 12,
-      runSpacing: 8,
-      children: [
-        // 开始扫描按钮
-        FilledButton.icon(
-          onPressed: viewModel.canScan ? viewModel.startScan : null,
-          icon: viewModel.task.status == ImageCopyTaskStatus.scanning
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.search),
-          label: Text(
-            viewModel.task.status == ImageCopyTaskStatus.scanning 
-                ? '扫描中...' 
-                : '开始扫描'
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          ),
-        ),
-        
-        // 开始复制按钮
-        FilledButton.icon(
-          onPressed: viewModel.canCopy ? viewModel.startCopy : null,
-          icon: viewModel.task.status == ImageCopyTaskStatus.copying
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.copy),
-          label: Text(
-            viewModel.task.status == ImageCopyTaskStatus.copying 
-                ? '复制中...' 
-                : '开始复制'
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: colorScheme.secondary,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          ),
-        ),
-        
-        // 取消按钮
-        if (viewModel.isRunning)
-          OutlinedButton.icon(
-            onPressed: viewModel.cancelTask,
-            icon: const Icon(Icons.stop),
-            label: const Text('取消'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.error,
+    return Card(
+      elevation: 0,
+      color: colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            // 开始扫描按钮
+            FilledButton.icon(
+              onPressed: viewModel.canScan ? viewModel.startScan : null,
+              icon: viewModel.task.status == ImageCopyTaskStatus.scanning
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.search),
+              label: Text(
+                viewModel.task.status == ImageCopyTaskStatus.scanning 
+                    ? '扫描中...' 
+                    : '开始扫描'
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
-          ),
-        
-        // 重置按钮
-        if (viewModel.hasCompleted || viewModel.hasError || viewModel.task.images.isNotEmpty)
-          OutlinedButton.icon(
-            onPressed: viewModel.resetTask,
-            icon: const Icon(Icons.refresh),
-            label: const Text('重置'),
-          ),
-      ],
-    );
-  }
-
-  /// 显示新建文件夹对话框
-  Future<void> _showCreateFolderDialog(
-    BuildContext context,
-    ImageCopyViewModel viewModel,
-  ) async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('新建文件夹'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: controller,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: '文件夹名称',
-              hintText: '请输入文件夹名称',
-              prefixIcon: Icon(Icons.folder),
+            
+            // 开始复制按钮
+            FilledButton.icon(
+              onPressed: viewModel.canCopy ? viewModel.startCopy : null,
+              icon: viewModel.task.status == ImageCopyTaskStatus.copying
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.copy),
+              label: Text(
+                viewModel.task.status == ImageCopyTaskStatus.copying 
+                    ? '复制中...' 
+                    : '开始复制'
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.secondary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '请输入文件夹名称';
-              }
-              // 检查非法字符
-              final invalidChars = RegExp(r'[<>"/\\|?*]');
-              if (invalidChars.hasMatch(value)) {
-                return '文件夹名称包含非法字符';
-              }
-              return null;
-            },
-            onFieldSubmitted: (value) {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop(value.trim());
-              }
-            },
-          ),
+            
+            // 取消按钮
+            if (viewModel.isRunning)
+              OutlinedButton.icon(
+                onPressed: viewModel.cancelTask,
+                icon: const Icon(Icons.stop),
+                label: const Text('取消'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop(controller.text.trim());
-              }
-            },
-            child: const Text('创建'),
-          ),
-        ],
       ),
     );
-
-    if (result != null && result.isNotEmpty) {
-      // 选择父目录并在其下创建新文件夹
-      await viewModel.createAndSelectTargetDirectory(result);
-    }
-
-    controller.dispose();
   }
 
   /// 构建进度区域
@@ -301,7 +269,7 @@ class _ImageCopyPageContent extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: colorScheme.surfaceContainer,
+      color: colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -324,9 +292,23 @@ class _ImageCopyPageContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             
-            // 进度条
-            if (task.status == ImageCopyTaskStatus.scanning ||
-                task.status == ImageCopyTaskStatus.copying)
+            // 扫描进度（扫描阶段）
+            if (task.status == ImageCopyTaskStatus.scanning)
+              Column(
+                children: [
+                  LinearProgressIndicator(
+                    backgroundColor: colorScheme.outline.withAlpha(25),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '正在扫描，已发现 ${task.images.length} 张图片...',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            
+            // 复制进度（复制阶段）
+            if (task.status == ImageCopyTaskStatus.copying)
               Column(
                 children: [
                   LinearProgressIndicator(
@@ -335,7 +317,7 @@ class _ImageCopyPageContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${(task.progress * 100).toStringAsFixed(1)}%',
+                    '${(task.progress * 100).toStringAsFixed(1)}% (${task.copiedCount + task.failedCount}/${task.images.length})',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -358,14 +340,40 @@ class _ImageCopyPageContent extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.info_outline,
+                      Icons.check_circle_outline,
                       color: colorScheme.onPrimaryContainer,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '扫描完成！找到 ${task.images.length} 张图片，点击"开始复制"按钮开始复制',
+                        '扫描完成！找到 ${task.images.length} 张图片，总大小 ${task.formattedTotalSize}'
+                        '${task.targetDir.isEmpty ? '\n请选择目标目录后点击"开始复制"' : ''}',
                         style: TextStyle(color: colorScheme.onPrimaryContainer),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            
+            // 复制完成提示
+            if (task.status == ImageCopyTaskStatus.completed)
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '复制完成！成功复制 ${task.copiedCount} 张图片'
+                        '${task.failedCount > 0 ? '，${task.failedCount} 张失败' : ''}'
+                        '${task.elapsedTime != null ? '，耗时 ${_formatDuration(task.elapsedTime!)}' : ''}',
+                        style: const TextStyle(color: Colors.green),
                       ),
                     ),
                   ],
@@ -406,7 +414,7 @@ class _ImageCopyPageContent extends StatelessWidget {
   /// 构建统计信息
   Widget _buildStatistics(BuildContext context, ImageCopyTask task) {
     return Wrap(
-      spacing: 16,
+      spacing: 12,
       runSpacing: 8,
       children: [
         _StatItem(
@@ -418,7 +426,7 @@ class _ImageCopyPageContent extends StatelessWidget {
             task.status == ImageCopyTaskStatus.completed ||
             task.status == ImageCopyTaskStatus.error)
           _StatItem(
-            label: '已拷贝',
+            label: '已复制',
             value: '${task.copiedCount} 张',
             icon: Icons.check_circle,
             color: Colors.green,
@@ -430,16 +438,11 @@ class _ImageCopyPageContent extends StatelessWidget {
             icon: Icons.error,
             color: Colors.red,
           ),
-        _StatItem(
-          label: '总大小',
-          value: task.formattedTotalSize,
-          icon: Icons.storage,
-        ),
-        if (task.elapsedTime != null)
+        if (task.images.isNotEmpty)
           _StatItem(
-            label: '耗时',
-            value: _formatDuration(task.elapsedTime!),
-            icon: Icons.timer,
+            label: '总大小',
+            value: task.formattedTotalSize,
+            icon: Icons.storage,
           ),
       ],
     );
@@ -453,7 +456,7 @@ class _ImageCopyPageContent extends StatelessWidget {
       case ImageCopyTaskStatus.scanning:
         return '正在扫描图片...';
       case ImageCopyTaskStatus.copying:
-        return '正在拷贝图片...';
+        return '正在复制图片...';
       case ImageCopyTaskStatus.completed:
         return '任务完成';
       case ImageCopyTaskStatus.error:
@@ -473,6 +476,69 @@ class _ImageCopyPageContent extends StatelessWidget {
       return '${duration.inHours} 时 ${duration.inMinutes % 60} 分';
     }
   }
+
+  /// 显示新建文件夹对话框
+  Future<void> _showCreateFolderDialog(
+    BuildContext context,
+    ImageCopyViewModel viewModel,
+  ) async {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('新建文件夹'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: '文件夹名称',
+              hintText: '请输入文件夹名称',
+              prefixIcon: Icon(Icons.folder),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '请输入文件夹名称';
+              }
+              final invalidChars = RegExp(r'[<>"/\\|?*]');
+              if (invalidChars.hasMatch(value)) {
+                return '文件夹名称包含非法字符';
+              }
+              return null;
+            },
+            onFieldSubmitted: (value) {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(value.trim());
+              }
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            child: const Text('创建'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await viewModel.createAndSelectTargetDirectory(result);
+    }
+
+    controller.dispose();
+  }
 }
 
 /// 目录选择器组件
@@ -484,6 +550,7 @@ class _DirectorySelector extends StatelessWidget {
   final VoidCallback onClear;
   final VoidCallback? onCreateNew;
   final IconData icon;
+  final bool allowEmpty;
 
   const _DirectorySelector({
     required this.label,
@@ -493,6 +560,7 @@ class _DirectorySelector extends StatelessWidget {
     required this.onClear,
     this.onCreateNew,
     required this.icon,
+    this.allowEmpty = false,
   });
 
   @override
@@ -560,15 +628,11 @@ class _DirectorySelector extends StatelessWidget {
                   tooltip: '清除',
                   visualDensity: VisualDensity.compact,
                 ),
-              // 新建文件夹按钮（仅目标目录显示）
               if (onCreateNew != null)
                 TextButton.icon(
                   onPressed: onCreateNew,
                   icon: const Icon(Icons.create_new_folder, size: 18),
                   label: const Text('新建'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colorScheme.primary,
-                  ),
                 ),
               FilledButton.tonal(
                 onPressed: onSelect,
@@ -604,7 +668,7 @@ class _StatusIcon extends StatelessWidget {
         color = colorScheme.primary;
       case ImageCopyTaskStatus.copying:
         icon = Icons.copy;
-        color = colorScheme.primary;
+        color = colorScheme.secondary;
       case ImageCopyTaskStatus.completed:
         icon = Icons.check_circle;
         color = Colors.green;

@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_constants.dart';
-import 'views/home_view.dart';
+import 'core/router/app_router.dart';
 
 /// 应用程序根组件
 /// 
-/// 配置应用的主题和路由
+/// 配置应用的主题和路由（使用 go_router）
 class ShxToolkitApp extends StatelessWidget {
   const ShxToolkitApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
       themeMode: ThemeMode.system,
-      home: const HomeView(),
+      routerConfig: AppRouter.router,
     );
   }
 
