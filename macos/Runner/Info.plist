@@ -28,5 +28,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- 文件访问用途说明 -->
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>需要访问文件系统以选择目录进行图片拷贝操作</string>
 </dict>
 </plist>

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/constants/app_constants.dart';
 import '../viewmodels/home_viewmodel.dart';
 import 'widgets/window_title_bar.dart';
+import 'tools/image_copy_page.dart' as tools;
 
 /// 主页视图
 /// 
@@ -487,29 +488,141 @@ class _ToolsPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.construction,
-            size: 64,
-            color: theme.colorScheme.primary.withAlpha(128),
-          ),
-          const SizedBox(height: 16),
+          // 页面标题
           Text(
-            '工具箱',
-            style: theme.textTheme.titleLarge,
+            '实用工具',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            '这里可以放置各种实用工具',
+            '选择下面的工具开始使用',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha(153),
+              color: colorScheme.onSurface.withAlpha(153),
             ),
           ),
+          const SizedBox(height: 24),
+          // 工具列表
+          Wrap(
+            spacing: 16,
+            runSpacing: 16,
+            children: [
+              _ToolCard(
+                icon: Icons.copy,
+                title: '图片拷贝',
+                description: '递归扫描目录中的所有图片文件，并复制到指定目录',
+                color: colorScheme.primary,
+                onTap: () => _openImageCopyTool(context),
+              ),
+              // 可以在这里添加更多工具卡片
+            ],
+          ),
         ],
+      ),
+    );
+  }
+
+  /// 打开图片拷贝工具
+  void _openImageCopyTool(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Dialog(
+        insetPadding: EdgeInsets.all(24),
+        child: SizedBox(
+          width: 900,
+          height: 700,
+          child: tools.ImageCopyPage(),
+        ),
+      ),
+    );
+  }
+}
+
+/// 工具卡片
+class _ToolCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ToolCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Card(
+      elevation: 0,
+      color: color.withAlpha(20),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: color.withAlpha(50)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(50),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withAlpha(153),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '开始使用',
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 16, color: color),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
