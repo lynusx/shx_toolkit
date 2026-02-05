@@ -7,7 +7,7 @@ import 'widgets/window_title_bar.dart';
 import 'tools/image_copy_page.dart' as tools;
 
 /// 主页视图
-/// 
+///
 /// 应用的主界面，包含:
 /// - 自定义标题栏
 /// - 侧边导航栏
@@ -54,9 +54,7 @@ class _HomeViewContent extends StatelessWidget {
                 // 侧边导航栏
                 _buildSidebar(context, viewModel),
                 // 内容区域
-                Expanded(
-                  child: _buildContentArea(context, viewModel),
-                ),
+                Expanded(child: _buildContentArea(context, viewModel)),
               ],
             ),
           ),
@@ -74,9 +72,7 @@ class _HomeViewContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          right: BorderSide(
-            color: colorScheme.outline.withAlpha(25),
-          ),
+          right: BorderSide(color: colorScheme.outline.withAlpha(25)),
         ),
       ),
       child: Column(
@@ -362,10 +358,7 @@ class _SettingsPageContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '窗口透明度',
-                              style: theme.textTheme.bodyMedium,
-                            ),
+                            Text('窗口透明度', style: theme.textTheme.bodyMedium),
                             Text(
                               '调整窗口的透明程度',
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -387,7 +380,8 @@ class _SettingsPageContent extends StatelessWidget {
                           min: 0.3,
                           max: 1.0,
                           divisions: 14,
-                          label: '${(viewModel.opacitySliderValue * 100).toInt()}%',
+                          label:
+                              '${(viewModel.opacitySliderValue * 100).toInt()}%',
                           onChanged: viewModel.setWindowOpacity,
                         ),
                       ),
@@ -435,4 +429,3 @@ class _SettingTile extends StatelessWidget {
     );
   }
 }
-
