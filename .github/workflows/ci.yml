@@ -49,11 +49,16 @@ jobs:
       run: flutter pub get
       
     - name: Run tests
-      run: flutter test --coverage || echo "No tests found"
+      run: |
+        if [ -d "test" ] && [ "$(find test -name '*.dart' -type f | wc -l)" -gt 0 ]; then
+          flutter test --coverage
+        else
+          echo "No tests found, skipping..."
+        fi
       
     - name: Upload coverage
       uses: codecov/codecov-action@v3
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' && hashFiles('coverage/lcov.info') != ''
       with:
         files: coverage/lcov.info
         fail_ci_if_error: false

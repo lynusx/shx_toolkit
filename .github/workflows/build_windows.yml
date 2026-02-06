@@ -43,7 +43,17 @@ jobs:
       run: flutter analyze lib/ --fatal-infos
       
     - name: Run tests
-      run: flutter test || echo "No tests found"
+      run: |
+        if (Test-Path "test" -PathType Container) {
+          $testFiles = Get-ChildItem -Path test -Filter *.dart -Recurse -ErrorAction SilentlyContinue
+          if ($testFiles.Count -gt 0) {
+            flutter test
+          } else {
+            Write-Host "No test files found, skipping..."
+          }
+        } else {
+          Write-Host "No test directory found, skipping..."
+        }
       
     - name: Build Windows Release
       run: flutter build windows --release
