@@ -116,21 +116,13 @@ jobs:
         $version = "${{ steps.version.outputs.VERSION }}"
         $content = Get-Content installer/windows_setup.iss -Raw
         $content = $content -replace '#define MyAppVersion "[0-9]+\.[0-9]+\.[0-9]+"', "#define MyAppVersion `"$version`""
+        $content = $content -replace 'OutputBaseFilename=SHX_Toolkit_Setup_v\{#MyAppVersion\}', 'OutputBaseFilename=SHX_Toolkit_Setup_v{#MyAppVersion}_x64'
         Set-Content installer/windows_setup.iss $content -NoNewline
+        Write-Host "Updated installer script with version: $version"
         
     - name: Create Installer
       run: |
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer/windows_setup.iss
-        
-    - name: Rename Installer with Version
-      shell: pwsh
-      run: |
-        $version = "${{ steps.version.outputs.VERSION }}"
-        $oldName = "build/installer/SHX_Toolkit_Setup_v$version.exe"
-        $newName = "build/installer/SHX_Toolkit_Setup_v${version}_x64.exe"
-        if (Test-Path $oldName) {
-          Rename-Item $oldName $newName
-        }
         
     - name: Upload Installer
       uses: actions/upload-artifact@v4
