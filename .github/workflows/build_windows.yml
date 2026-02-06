@@ -15,7 +15,7 @@ on:
         default: ''
 
 env:
-  FLUTTER_VERSION: '3.24.5'
+  FLUTTER_VERSION: '3.38.9'
 
 jobs:
   # 构建 Windows 应用
