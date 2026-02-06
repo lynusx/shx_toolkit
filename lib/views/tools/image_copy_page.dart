@@ -60,9 +60,22 @@ class _ImageCopyPageScaffold extends StatelessWidget {
   }
 }
 
-/// 图片拷贝页面内容（可嵌入使用）
+/// 图片拷贝页面内容（路由使用）
 class ImageCopyPageContent extends StatelessWidget {
   const ImageCopyPageContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ImageCopyViewModel(),
+      child: const _ImageCopyPageContentBody(),
+    );
+  }
+}
+
+/// 图片拷贝页面内容体
+class _ImageCopyPageContentBody extends StatelessWidget {
+  const _ImageCopyPageContentBody();
 
   @override
   Widget build(BuildContext context) {

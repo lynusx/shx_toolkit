@@ -8,31 +8,28 @@ import 'base_viewmodel.dart';
 /// 管理主页的业务逻辑和状态，包括:
 /// - 窗口状态管理
 /// - 透明度控制
-/// - 侧边栏导航
+/// 
+/// 注意：侧边栏导航由 go_router 管理，不再使用 selectedIndex
 class HomeViewModel extends BaseViewModel {
   final WindowService _windowService = WindowService();
 
   // 窗口状态
   WindowState _windowState = const WindowState();
   
-  // 当前选中的导航索引
-  int _selectedIndex = 0;
-  
   // 透明度滑块值（0.1 - 1.0）
   double _opacitySliderValue = 1.0;
 
   // Getters
   WindowState get windowState => _windowState;
-  int get selectedIndex => _selectedIndex;
   double get opacitySliderValue => _opacitySliderValue;
   bool get isMaximized => _windowState.isMaximized;
   bool get isAlwaysOnTop => _windowState.isAlwaysOnTop;
   bool get isFullScreen => _windowState.isFullScreen;
 
-  // 导航菜单项
+  // 导航菜单项（供 NavigationRail 使用）
   final List<NavItem> navItems = [
-    NavItem(icon: 0xe8b8, label: '图片拷贝', tooltip: '图片拷贝工具'),
-    NavItem(icon: 0xe8f9, label: '设置', tooltip: '应用设置'),
+    NavItem(icon: 0xe3b6, label: '离线EL', tooltip: '离线EL图片收集'), // Icons.collections
+    NavItem(icon: 0xe8b8, label: '设置', tooltip: '应用设置'),       // Icons.settings
   ];
 
   StreamSubscription? _windowStateSubscription;
@@ -53,14 +50,6 @@ class HomeViewModel extends BaseViewModel {
     _windowState = state;
     _opacitySliderValue = state.opacity;
     notifyListeners();
-  }
-
-  /// 设置选中索引
-  void setSelectedIndex(int index) {
-    if (_selectedIndex != index) {
-      _selectedIndex = index;
-      notifyListeners();
-    }
   }
 
   // ==================== 窗口控制 ====================
@@ -105,20 +94,6 @@ class HomeViewModel extends BaseViewModel {
   /// 居中窗口
   Future<void> centerWindow() async {
     await _windowService.centerWindow();
-  }
-
-  // ==================== 页面内容 ====================
-
-  /// 根据索引获取页面标题
-  String getPageTitle(int index) {
-    switch (index) {
-      case 0:
-        return '图片拷贝';
-      case 1:
-        return '设置';
-      default:
-        return '图片拷贝';
-    }
   }
 
   @override
