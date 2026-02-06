@@ -112,10 +112,7 @@ class _SettingsPageContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '窗口透明度',
-                              style: theme.textTheme.bodyMedium,
-                            ),
+                            Text('窗口透明度', style: theme.textTheme.bodyMedium),
                             Text(
                               '调整窗口的透明程度',
                               style: theme.textTheme.bodySmall?.copyWith(
@@ -137,7 +134,8 @@ class _SettingsPageContent extends StatelessWidget {
                           min: 0.3,
                           max: 1.0,
                           divisions: 14,
-                          label: '${(viewModel.opacitySliderValue * 100).toInt()}%',
+                          label:
+                              '${(viewModel.opacitySliderValue * 100).toInt()}%',
                           onChanged: viewModel.setWindowOpacity,
                         ),
                       ),

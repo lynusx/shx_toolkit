@@ -3,7 +3,7 @@ import 'core/constants/app_constants.dart';
 import 'core/router/app_router.dart';
 
 /// 应用程序根组件
-/// 
+///
 /// 配置应用的主题和路由（使用 go_router）
 class ShxToolkitApp extends StatelessWidget {
   const ShxToolkitApp({super.key});
@@ -33,13 +33,9 @@ class ShxToolkitApp extends StatelessWidget {
       scaffoldBackgroundColor: colorScheme.surfaceContainerLowest,
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      dividerTheme: DividerThemeData(
-        color: colorScheme.outline.withAlpha(50),
-      ),
+      dividerTheme: DividerThemeData(color: colorScheme.outline.withAlpha(50)),
       sliderTheme: SliderThemeData(
         activeTrackColor: colorScheme.primary,
         thumbColor: colorScheme.primary,
@@ -61,13 +57,9 @@ class ShxToolkitApp extends StatelessWidget {
       scaffoldBackgroundColor: colorScheme.surfaceContainerLowest,
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      dividerTheme: DividerThemeData(
-        color: colorScheme.outline.withAlpha(50),
-      ),
+      dividerTheme: DividerThemeData(color: colorScheme.outline.withAlpha(50)),
       sliderTheme: SliderThemeData(
         activeTrackColor: colorScheme.primary,
         thumbColor: colorScheme.primary,

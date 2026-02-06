@@ -4,7 +4,7 @@ import '../constants/app_constants.dart';
 import '../../models/window_state.dart';
 
 /// 窗口管理服务
-/// 
+///
 /// 负责所有与窗口相关的操作，包括:
 /// - 初始化窗口配置
 /// - 窗口状态管理（最大化、最小化、全屏等）

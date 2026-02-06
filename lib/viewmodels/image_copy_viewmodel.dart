@@ -7,36 +7,32 @@ import '../models/image_copy_task.dart';
 import 'base_viewmodel.dart';
 
 /// 图片拷贝 ViewModel
-/// 
+///
 /// 管理图片拷贝任务的业务逻辑：
 /// - 选择源目录和目标目录
 /// - 递归扫描图片文件
 /// - 执行拷贝操作
 /// - 显示进度和状态
 class ImageCopyViewModel extends BaseViewModel {
-  ImageCopyTask _task = const ImageCopyTask(
-    sourceDir: '',
-    targetDir: '',
-  );
+  ImageCopyTask _task = const ImageCopyTask(sourceDir: '', targetDir: '');
 
   // 取消标记
   bool _isCancelled = false;
-  
+
   // 流控制器用于进度通知
   final _progressController = StreamController<ImageCopyTask>.broadcast();
   Stream<ImageCopyTask> get progressStream => _progressController.stream;
 
   ImageCopyTask get task => _task;
-  bool get isRunning => 
-      _task.status == ImageCopyTaskStatus.scanning || 
+  bool get isRunning =>
+      _task.status == ImageCopyTaskStatus.scanning ||
       _task.status == ImageCopyTaskStatus.copying;
-  bool get canStart => 
-      _task.sourceDir.isNotEmpty && 
-      _task.targetDir.isNotEmpty && 
-      !isRunning;
+  bool get canStart =>
+      _task.sourceDir.isNotEmpty && _task.targetDir.isNotEmpty && !isRunning;
   bool get hasCompleted => _task.status == ImageCopyTaskStatus.completed;
   @override
-  bool get hasError => _task.status == ImageCopyTaskStatus.error || super.hasError;
+  bool get hasError =>
+      _task.status == ImageCopyTaskStatus.error || super.hasError;
 
   /// 选择源目录
   Future<void> selectSourceDirectory() async {
@@ -45,7 +41,7 @@ class ImageCopyViewModel extends BaseViewModel {
         dialogTitle: '选择源目录',
         lockParentWindow: true,
       );
-      
+
       if (selectedDirectory != null && selectedDirectory != _task.sourceDir) {
         _task = ImageCopyTask(
           sourceDir: selectedDirectory,
@@ -66,7 +62,7 @@ class ImageCopyViewModel extends BaseViewModel {
         dialogTitle: '选择目标目录',
         lockParentWindow: true,
       );
-      
+
       if (selectedDirectory != null && selectedDirectory != _task.targetDir) {
         _task = _task.copyWith(
           targetDir: selectedDirectory,
@@ -87,20 +83,20 @@ class ImageCopyViewModel extends BaseViewModel {
         dialogTitle: '选择父目录（将在其下创建"$folderName"文件夹）',
         lockParentWindow: true,
       );
-      
+
       if (parentDir == null) return;
 
       // 在父目录下创建新文件夹
       final newFolderPath = path.join(parentDir, folderName);
       final newDir = Directory(newFolderPath);
-      
+
       if (await newDir.exists()) {
         setError('文件夹 "$folderName" 已存在');
         return;
       }
 
       await newDir.create(recursive: true);
-      
+
       _task = _task.copyWith(
         targetDir: newFolderPath,
         status: ImageCopyTaskStatus.idle,
@@ -113,15 +109,15 @@ class ImageCopyViewModel extends BaseViewModel {
 
   /// 是否可以开始扫描（只需要源目录）
   bool get canScan => _task.sourceDir.isNotEmpty && !isRunning;
-  
+
   /// 是否可以开始复制（需要扫描完成且有图片）
-  bool get canCopy => 
-      _task.sourceDir.isNotEmpty && 
-      _task.targetDir.isNotEmpty && 
-      _task.images.isNotEmpty && 
-      (_task.status == ImageCopyTaskStatus.idle || 
-       _task.status == ImageCopyTaskStatus.scanning ||
-       _task.status == ImageCopyTaskStatus.completed) &&
+  bool get canCopy =>
+      _task.sourceDir.isNotEmpty &&
+      _task.targetDir.isNotEmpty &&
+      _task.images.isNotEmpty &&
+      (_task.status == ImageCopyTaskStatus.idle ||
+          _task.status == ImageCopyTaskStatus.scanning ||
+          _task.status == ImageCopyTaskStatus.completed) &&
       !isRunning;
 
   /// 开始扫描
@@ -168,8 +164,8 @@ class ImageCopyViewModel extends BaseViewModel {
 
     // 检查目标目录是否在源目录内
     if (path.isWithin(
-      path.normalize(_task.sourceDir), 
-      path.normalize(_task.targetDir)
+      path.normalize(_task.sourceDir),
+      path.normalize(_task.targetDir),
     )) {
       setError('目标目录不能在源目录内');
       return;
@@ -213,7 +209,10 @@ class ImageCopyViewModel extends BaseViewModel {
       throw Exception('源目录不存在');
     }
 
-    await for (final entity in sourceDir.list(recursive: true, followLinks: false)) {
+    await for (final entity in sourceDir.list(
+      recursive: true,
+      followLinks: false,
+    )) {
       if (_isCancelled) break;
 
       if (entity is File) {
@@ -221,14 +220,16 @@ class ImageCopyViewModel extends BaseViewModel {
         if (ImageExtensions.all.contains(ext)) {
           try {
             final stat = await entity.stat();
-            images.add(ImageFileInfo(
-              path: entity.path,
-              name: path.basename(entity.path),
-              size: stat.size,
-              modifiedTime: stat.modified,
-              extension: ext,
-            ));
-            
+            images.add(
+              ImageFileInfo(
+                path: entity.path,
+                name: path.basename(entity.path),
+                size: stat.size,
+                modifiedTime: stat.modified,
+                extension: ext,
+              ),
+            );
+
             // 每扫描到 10 个文件更新一次进度
             if (images.length % 10 == 0) {
               _task = _task.copyWith(images: List.unmodifiable(images));
@@ -268,11 +269,11 @@ class ImageCopyViewModel extends BaseViewModel {
       if (_isCancelled) break;
 
       final image = _task.images[i];
-      
+
       try {
         // 生成目标文件路径
         final targetPath = _generateTargetPath(image.name);
-        
+
         // 复制文件
         await File(image.path).copy(targetPath);
         copiedCount++;
@@ -308,7 +309,7 @@ class ImageCopyViewModel extends BaseViewModel {
   String _generateTargetPath(String fileName) {
     final baseName = path.basenameWithoutExtension(fileName);
     final ext = path.extension(fileName);
-    
+
     String targetPath = path.join(_task.targetDir, fileName);
     int counter = 1;
 
@@ -332,20 +333,14 @@ class ImageCopyViewModel extends BaseViewModel {
   /// 重置任务
   void resetTask() {
     _isCancelled = false;
-    _task = ImageCopyTask(
-      sourceDir: '',
-      targetDir: '',
-    );
+    _task = ImageCopyTask(sourceDir: '', targetDir: '');
     clearError();
     notifyListeners();
   }
 
   /// 清空源目录选择
   void clearSourceDir() {
-    _task = ImageCopyTask(
-      sourceDir: '',
-      targetDir: _task.targetDir,
-    );
+    _task = ImageCopyTask(sourceDir: '', targetDir: _task.targetDir);
     notifyListeners();
   }
 

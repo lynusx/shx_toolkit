@@ -1,16 +1,16 @@
 /// EL图片收集任务状态
 enum ELCollectionStatus {
-  idle,       // 空闲
-  scanning,   // 扫描中
-  copying,    // 复制中
-  completed,  // 完成
-  error,      // 错误
-  cancelled,  // 已取消
+  idle, // 空闲
+  scanning, // 扫描中
+  copying, // 复制中
+  completed, // 完成
+  error, // 错误
+  cancelled, // 已取消
 }
 
 /// 班次类型
 enum ShiftType {
-  dayShift,   // 白班 8:30-20:30
+  dayShift, // 白班 8:30-20:30
   nightShift, // 夜班 20:30-8:30
 }
 
@@ -43,12 +43,12 @@ class ShiftTypeUtil {
     final hour = now.hour;
     final minute = now.minute;
     final timeValue = hour * 60 + minute;
-    
+
     // 白班: 8:30-20:30 (510-1230)
     // 夜班: 20:30-8:30 (1230-510)
-    final dayShiftStart = 8 * 60 + 30;  // 510
-    final dayShiftEnd = 20 * 60 + 30;   // 1230
-    
+    final dayShiftStart = 8 * 60 + 30; // 510
+    final dayShiftEnd = 20 * 60 + 30; // 1230
+
     if (timeValue >= dayShiftStart && timeValue < dayShiftEnd) {
       return ShiftType.dayShift;
     } else {
@@ -65,8 +65,8 @@ class ShiftTypeUtil {
 
 /// 线别配置
 class LineConfig {
-  final String region;    // 区域（东区/西区）
-  final String lineName;  // 线别名称（1A, 1B等）
+  final String region; // 区域（东区/西区）
+  final String lineName; // 线别名称（1A, 1B等）
   final String ipAddress; // IP地址（\10.108.8.232）
 
   const LineConfig({
@@ -83,13 +83,10 @@ class LineConfig {
 
 /// 脏污类型
 class DefectType {
-  final String name;      // 显示名称
+  final String name; // 显示名称
   final String folderName; // 文件夹名称（如 NG_脏污_B）
 
-  const DefectType({
-    required this.name,
-    required this.folderName,
-  });
+  const DefectType({required this.name, required this.folderName});
 
   /// 默认脏污类型列表
   static const List<DefectType> defaults = [
@@ -104,14 +101,14 @@ class DefectType {
 
 /// EL图片文件信息
 class ELImageFile {
-  final String path;           // 完整路径
-  final String name;           // 文件名
-  final String lineName;       // 线别
-  final String date;           // 日期
-  final String shift;          // 班次
-  final int timeSlot;          // 时间段
-  final String defectType;     // 脏污类型
-  final int size;              // 文件大小
+  final String path; // 完整路径
+  final String name; // 文件名
+  final String lineName; // 线别
+  final String date; // 日期
+  final String shift; // 班次
+  final int timeSlot; // 时间段
+  final String defectType; // 脏污类型
+  final int size; // 文件大小
   final DateTime modifiedTime; // 修改时间
 
   const ELImageFile({
@@ -136,22 +133,22 @@ class ELImageFile {
 /// EL图片收集任务
 class ELCollectionTask {
   // 配置参数
-  final LineConfig? lineConfig;           // 线别配置
-  final String date;                      // 日期（20260205）
-  final ShiftType? shift;                 // 班次
-  final List<int> timeSlots;              // 时间段列表
-  final List<String> defectTypes;         // 脏污类型列表
-  final String targetDir;                 // 目标目录
-  
+  final LineConfig? lineConfig; // 线别配置
+  final String date; // 日期（20260205）
+  final ShiftType? shift; // 班次
+  final List<int> timeSlots; // 时间段列表
+  final List<String> defectTypes; // 脏污类型列表
+  final String targetDir; // 目标目录
+
   // 任务状态
   final ELCollectionStatus status;
-  final List<ELImageFile> images;         // 扫描到的图片
-  final int copiedCount;                  // 已复制数量
-  final int failedCount;                  // 失败数量
-  final String? errorMessage;             // 错误信息
-  final DateTime? startTime;              // 开始时间
-  final DateTime? endTime;                // 结束时间
-  final String? currentScanningPath;      // 当前正在扫描的路径
+  final List<ELImageFile> images; // 扫描到的图片
+  final int copiedCount; // 已复制数量
+  final int failedCount; // 失败数量
+  final String? errorMessage; // 错误信息
+  final DateTime? startTime; // 开始时间
+  final DateTime? endTime; // 结束时间
+  final String? currentScanningPath; // 当前正在扫描的路径
 
   const ELCollectionTask({
     this.lineConfig,
@@ -184,7 +181,8 @@ class ELCollectionTask {
     final size = totalSize;
     if (size < 1024) return '$size B';
     if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(2)} KB';
-    if (size < 1024 * 1024 * 1024) return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
+    if (size < 1024 * 1024 * 1024)
+      return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
     return '${(size / 1024 / 1024 / 1024).toStringAsFixed(2)} GB';
   }
 

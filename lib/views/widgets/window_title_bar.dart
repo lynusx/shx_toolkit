@@ -2,12 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 /// 窗口标题栏
-/// 
+///
 /// 自定义的窗口标题栏，包含:
 /// - 标题和图标
 /// - 拖拽区域
 /// - 窗口控制按钮（最小化、最大化、关闭）
-/// 
+///
 /// 注意: macOS 上会自动预留红绿灯按钮空间
 class WindowTitleBar extends StatelessWidget {
   final String title;
@@ -47,17 +47,14 @@ class WindowTitleBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outline.withAlpha(25),
-          ),
+          bottom: BorderSide(color: colorScheme.outline.withAlpha(25)),
         ),
       ),
       child: Row(
         children: [
           // macOS: 预留红绿灯按钮空间
-          if (_isMacOS)
-            const SizedBox(width: _macOSButtonAreaWidth),
-          
+          if (_isMacOS) const SizedBox(width: _macOSButtonAreaWidth),
+
           // 拖拽区域（左侧）
           Expanded(
             child: GestureDetector(
@@ -65,18 +62,12 @@ class WindowTitleBar extends StatelessWidget {
               onDoubleTap: _isMacOS ? null : onMaximize, // macOS 双击由系统处理
               child: Container(
                 color: Colors.transparent,
-                padding: EdgeInsets.symmetric(
-                  horizontal: _isMacOS ? 12 : 16,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: _isMacOS ? 12 : 16),
                 child: Row(
                   children: [
                     // 非 macOS 显示应用图标
                     if (!_isMacOS) ...[
-                      Icon(
-                        Icons.apps,
-                        size: 20,
-                        color: colorScheme.primary,
-                      ),
+                      Icon(Icons.apps, size: 20, color: colorScheme.primary),
                       const SizedBox(width: 10),
                     ],
                     // 标题
@@ -103,7 +94,7 @@ class WindowTitleBar extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // 窗口控制按钮（右侧）
           // macOS: 隐藏默认控制按钮，只显示置顶按钮
           // Windows/Linux: 显示完整控制按钮

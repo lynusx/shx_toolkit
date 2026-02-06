@@ -4,18 +4,18 @@ import '../models/window_state.dart';
 import 'base_viewmodel.dart';
 
 /// 主页 ViewModel
-/// 
+///
 /// 管理主页的业务逻辑和状态，包括:
 /// - 窗口状态管理
 /// - 透明度控制
-/// 
+///
 /// 注意：侧边栏导航由 go_router 管理，不再使用 selectedIndex
 class HomeViewModel extends BaseViewModel {
   final WindowService _windowService = WindowService();
 
   // 窗口状态
   WindowState _windowState = const WindowState();
-  
+
   // 透明度滑块值（0.1 - 1.0）
   double _opacitySliderValue = 1.0;
 
@@ -28,8 +28,12 @@ class HomeViewModel extends BaseViewModel {
 
   // 导航菜单项（供 NavigationRail 使用）
   final List<NavItem> navItems = [
-    NavItem(icon: 0xe3b6, label: '离线EL', tooltip: '离线EL图片收集'), // Icons.collections
-    NavItem(icon: 0xe8b8, label: '设置', tooltip: '应用设置'),       // Icons.settings
+    NavItem(
+      icon: 0xe3b6,
+      label: '离线EL',
+      tooltip: '离线EL图片收集',
+    ), // Icons.collections
+    NavItem(icon: 0xe8b8, label: '设置', tooltip: '应用设置'), // Icons.settings
   ];
 
   StreamSubscription? _windowStateSubscription;

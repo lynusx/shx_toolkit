@@ -6,7 +6,7 @@ import '../../views/tools/image_copy_page.dart' as tools;
 import '../../views/tools/el_collection_page.dart' as el;
 
 /// 应用路由配置
-/// 
+///
 /// 使用 go_router 管理应用路由，侧边栏导航通过路由驱动：
 /// - /                   离线EL收集（默认）
 /// - /settings           设置页面
@@ -15,7 +15,7 @@ import '../../views/tools/el_collection_page.dart' as el;
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
   static final _shellNavigatorKey = GlobalKey<NavigatorState>();
-  
+
   /// 路由配置
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,

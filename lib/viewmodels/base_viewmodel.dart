@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 /// ViewModel 基类
-/// 
+///
 /// 提供通用的状态管理功能:
 /// - 加载状态
 /// - 错误处理

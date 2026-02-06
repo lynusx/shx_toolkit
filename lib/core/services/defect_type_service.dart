@@ -12,7 +12,7 @@ class DefectTypeService {
 
   // 配置文件名
   static const String _configFileName = 'defect_types.json';
-  
+
   // 默认配置
   static const List<Map<String, String>> _defaultConfig = [
     {'name': '脏污', 'folderName': 'NG_脏污_B'},
@@ -79,15 +79,14 @@ class DefectTypeService {
     try {
       final configPath = await _configFilePath;
       final file = File(configPath);
-      
-      final jsonData = types.map((t) => {
-        'name': t.name,
-        'folderName': t.folderName,
-      }).toList();
-      
+
+      final jsonData = types
+          .map((t) => {'name': t.name, 'folderName': t.folderName})
+          .toList();
+
       const encoder = JsonEncoder.withIndent('  ');
       final jsonString = encoder.convert(jsonData);
-      
+
       await file.writeAsString(jsonString);
       _cachedTypes = types;
     } catch (e) {
@@ -100,27 +99,31 @@ class DefectTypeService {
 
   /// 解析配置JSON
   List<DefectType> _parseDefectTypes(List<dynamic> jsonData) {
-    return jsonData.map((item) => DefectType(
-      name: item['name'] as String,
-      folderName: item['folderName'] as String,
-    )).toList();
+    return jsonData
+        .map(
+          (item) => DefectType(
+            name: item['name'] as String,
+            folderName: item['folderName'] as String,
+          ),
+        )
+        .toList();
   }
 
   /// 添加脏污类型
   Future<void> addDefectType(DefectType defectType) async {
     final types = await loadDefectTypes();
-    
+
     // 检查是否已存在
     final existingIndex = types.indexWhere(
       (t) => t.folderName == defectType.folderName,
     );
-    
+
     if (existingIndex >= 0) {
       types[existingIndex] = defectType;
     } else {
       types.add(defectType);
     }
-    
+
     await saveDefectTypes(types);
   }
 
@@ -132,7 +135,10 @@ class DefectTypeService {
   }
 
   /// 更新脏污类型
-  Future<void> updateDefectType(String oldFolderName, DefectType newType) async {
+  Future<void> updateDefectType(
+    String oldFolderName,
+    DefectType newType,
+  ) async {
     final types = await loadDefectTypes();
     final index = types.indexWhere((t) => t.folderName == oldFolderName);
     if (index >= 0) {

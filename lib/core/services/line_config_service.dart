@@ -5,7 +5,7 @@ import 'package:path/path.dart' as path;
 import '../../models/el_collection_task.dart';
 
 /// 线别配置管理服务
-/// 
+///
 /// 负责加载、保存和管理线别配置JSON文件
 class LineConfigService {
   static final LineConfigService _instance = LineConfigService._internal();
@@ -14,7 +14,7 @@ class LineConfigService {
 
   // 配置文件名
   static const String _configFileName = 'line_config.json';
-  
+
   // 默认配置
   static const Map<String, dynamic> _defaultConfig = {
     "东区": {
@@ -39,7 +39,7 @@ class LineConfigService {
       "10A": "\\\\10.108.8.214",
       "10B": "\\\\10.108.8.213",
       "LX2": "\\\\10.108.3.107",
-      "LX3": "\\\\10.108.3.108"
+      "LX3": "\\\\10.108.3.108",
     },
     "西区": {
       "1A": "\\\\10.108.229.131",
@@ -64,8 +64,8 @@ class LineConfigService {
       "10B": "\\\\10.108.229.150",
       "LX1": "\\\\10.108.229.151",
       "LX2": "\\\\10.108.229.152",
-      "LX3": "\\\\10.108.229.153"
-    }
+      "LX3": "\\\\10.108.229.153",
+    },
   };
 
   // 配置缓存
@@ -127,12 +127,12 @@ class LineConfigService {
     try {
       final configPath = await _configFilePath;
       final file = File(configPath);
-      
+
       const encoder = JsonEncoder.withIndent('  ');
       final jsonString = encoder.convert(config);
-      
+
       await file.writeAsString(jsonString);
-      
+
       // 更新缓存
       _cachedConfigs = _parseConfigs(config);
     } catch (e) {
@@ -146,67 +146,67 @@ class LineConfigService {
   /// 解析配置JSON
   List<LineConfig> _parseConfigs(Map<String, dynamic> jsonData) {
     final List<LineConfig> configs = [];
-    
+
     jsonData.forEach((region, lines) {
       if (lines is Map<String, dynamic>) {
         lines.forEach((lineName, ipAddress) {
-          configs.add(LineConfig(
-            region: region,
-            lineName: lineName,
-            ipAddress: ipAddress.toString(),
-          ));
+          configs.add(
+            LineConfig(
+              region: region,
+              lineName: lineName,
+              ipAddress: ipAddress.toString(),
+            ),
+          );
         });
       }
     });
-    
+
     // 按区域和线别排序
     configs.sort((a, b) {
       final regionCompare = a.region.compareTo(b.region);
       if (regionCompare != 0) return regionCompare;
       return a.lineName.compareTo(b.lineName);
     });
-    
+
     return configs;
   }
 
   /// 将配置转换为JSON
   Map<String, dynamic> configsToJson(List<LineConfig> configs) {
     final Map<String, dynamic> result = {};
-    
+
     for (final config in configs) {
       if (!result.containsKey(config.region)) {
         result[config.region] = {};
       }
       result[config.region][config.lineName] = config.ipAddress;
     }
-    
+
     return result;
   }
 
   /// 添加线别配置
   Future<void> addConfig(LineConfig config) async {
     final configs = await loadConfigs();
-    
+
     // 检查是否已存在
     final existingIndex = configs.indexWhere(
       (c) => c.region == config.region && c.lineName == config.lineName,
     );
-    
+
     if (existingIndex >= 0) {
       configs[existingIndex] = config;
     } else {
       configs.add(config);
     }
-    
+
     await saveConfigs(configsToJson(configs));
   }
 
   /// 删除线别配置
   Future<void> removeConfig(String region, String lineName) async {
     final configs = await loadConfigs();
-    configs.removeWhere(
-      (c) => c.region == region && c.lineName == lineName,
-    );
+    configs.removeWhere((c) => c.region == region && c.lineName == lineName);
     await saveConfigs(configsToJson(configs));
   }
 

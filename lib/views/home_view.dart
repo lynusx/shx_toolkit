@@ -71,7 +71,11 @@ class _HomeViewContent extends StatelessWidget {
   }
 
   /// 构建侧边 NavigationRail 导航
-  Widget _buildSidebar(BuildContext context, HomeViewModel viewModel, int selectedIndex) {
+  Widget _buildSidebar(
+    BuildContext context,
+    HomeViewModel viewModel,
+    int selectedIndex,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return NavigationRail(
@@ -108,9 +112,6 @@ class _HomeViewContent extends StatelessWidget {
   Widget _buildContentArea(BuildContext context, Widget child) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      color: colorScheme.surfaceContainerLowest,
-      child: child,
-    );
+    return Container(color: colorScheme.surfaceContainerLowest, child: child);
   }
 }

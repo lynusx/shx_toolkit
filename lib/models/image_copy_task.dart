@@ -1,20 +1,20 @@
 /// 图片拷贝任务状态
 enum ImageCopyTaskStatus {
-  idle,       // 空闲
-  scanning,   // 扫描中
-  copying,    // 拷贝中
-  completed,  // 完成
-  error,      // 错误
-  cancelled,  // 已取消
+  idle, // 空闲
+  scanning, // 扫描中
+  copying, // 拷贝中
+  completed, // 完成
+  error, // 错误
+  cancelled, // 已取消
 }
 
 /// 图片文件信息
 class ImageFileInfo {
-  final String path;           // 文件路径
-  final String name;           // 文件名
-  final int size;              // 文件大小（字节）
+  final String path; // 文件路径
+  final String name; // 文件名
+  final int size; // 文件大小（字节）
   final DateTime modifiedTime; // 修改时间
-  final String extension;      // 文件扩展名
+  final String extension; // 文件扩展名
 
   const ImageFileInfo({
     required this.path,
@@ -28,7 +28,8 @@ class ImageFileInfo {
   String get formattedSize {
     if (size < 1024) return '$size B';
     if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(2)} KB';
-    if (size < 1024 * 1024 * 1024) return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
+    if (size < 1024 * 1024 * 1024)
+      return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
     return '${(size / 1024 / 1024 / 1024).toStringAsFixed(2)} GB';
   }
 
@@ -38,15 +39,15 @@ class ImageFileInfo {
 
 /// 图片拷贝任务
 class ImageCopyTask {
-  final String sourceDir;              // 源目录
-  final String targetDir;              // 目标目录
-  final ImageCopyTaskStatus status;    // 任务状态
-  final List<ImageFileInfo> images;    // 扫描到的图片列表
-  final int copiedCount;               // 已拷贝数量
-  final int failedCount;               // 失败数量
-  final String? errorMessage;          // 错误信息
-  final DateTime? startTime;           // 开始时间
-  final DateTime? endTime;             // 结束时间
+  final String sourceDir; // 源目录
+  final String targetDir; // 目标目录
+  final ImageCopyTaskStatus status; // 任务状态
+  final List<ImageFileInfo> images; // 扫描到的图片列表
+  final int copiedCount; // 已拷贝数量
+  final int failedCount; // 失败数量
+  final String? errorMessage; // 错误信息
+  final DateTime? startTime; // 开始时间
+  final DateTime? endTime; // 结束时间
 
   const ImageCopyTask({
     required this.sourceDir,
@@ -74,7 +75,8 @@ class ImageCopyTask {
     final size = totalSize;
     if (size < 1024) return '$size B';
     if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(2)} KB';
-    if (size < 1024 * 1024 * 1024) return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
+    if (size < 1024 * 1024 * 1024)
+      return '${(size / 1024 / 1024).toStringAsFixed(2)} MB';
     return '${(size / 1024 / 1024 / 1024).toStringAsFixed(2)} GB';
   }
 
@@ -113,9 +115,24 @@ class ImageCopyTask {
 /// 支持的图片扩展名
 class ImageExtensions {
   static const Set<String> all = {
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-    '.tiff', '.tif', '.svg', '.raw', '.cr2', '.nef',
-    '.heic', '.heif', '.ico', '.jfif', '.pjpeg', '.pjp',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.tiff',
+    '.tif',
+    '.svg',
+    '.raw',
+    '.cr2',
+    '.nef',
+    '.heic',
+    '.heif',
+    '.ico',
+    '.jfif',
+    '.pjpeg',
+    '.pjp',
   };
 
   static bool isImage(String filename) {

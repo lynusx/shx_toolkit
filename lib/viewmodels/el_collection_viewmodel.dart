@@ -16,13 +16,13 @@ class ELCollectionViewModel extends BaseViewModel {
 
   // 任务状态
   ELCollectionTask _task = const ELCollectionTask();
-  
+
   // 线别配置列表
   List<LineConfig> _lineConfigs = [];
-  
+
   // 脏污类型列表
   List<DefectType> _defectTypes = [];
-  
+
   // 取消标记
   bool _isCancelled = false;
 
@@ -30,16 +30,13 @@ class ELCollectionViewModel extends BaseViewModel {
   ELCollectionTask get task => _task;
   List<LineConfig> get lineConfigs => _lineConfigs;
   List<DefectType> get defectTypes => _defectTypes;
-  bool get isRunning => 
-      task.status == ELCollectionStatus.scanning || 
+  bool get isRunning =>
+      task.status == ELCollectionStatus.scanning ||
       task.status == ELCollectionStatus.copying;
 
   /// 初始化
   Future<void> init() async {
-    await Future.wait([
-      _loadLineConfigs(),
-      _loadDefectTypes(),
-    ]);
+    await Future.wait([_loadLineConfigs(), _loadDefectTypes()]);
     _initDefaultValues();
   }
 
@@ -68,11 +65,11 @@ class ELCollectionViewModel extends BaseViewModel {
     final now = DateTime.now();
     final shift = ShiftTypeUtil.getCurrentShift();
     final timeSlot = ShiftTypeUtil.getCurrentTimeSlot();
-    
+
     // 检查当前时间段是否在班次范围内
     final validTimeSlots = shift.timeSlots;
-    final selectedTimeSlots = validTimeSlots.contains(timeSlot) 
-        ? [timeSlot] 
+    final selectedTimeSlots = validTimeSlots.contains(timeSlot)
+        ? [timeSlot]
         : validTimeSlots;
 
     _task = ELCollectionTask(
@@ -114,10 +111,7 @@ class ELCollectionViewModel extends BaseViewModel {
   void setShift(ShiftType? shift) {
     // 切换班次时自动更新时间段
     final newTimeSlots = shift?.timeSlots ?? [];
-    _task = _task.copyWith(
-      shift: shift,
-      timeSlots: newTimeSlots,
-    );
+    _task = _task.copyWith(shift: shift, timeSlots: newTimeSlots);
     notifyListeners();
   }
 
@@ -181,7 +175,7 @@ class ELCollectionViewModel extends BaseViewModel {
         dialogTitle: '选择目标目录',
         lockParentWindow: true,
       );
-      
+
       if (selectedDirectory != null) {
         _task = _task.copyWith(targetDir: selectedDirectory);
         notifyListeners();
@@ -283,20 +277,25 @@ class ELCollectionViewModel extends BaseViewModel {
 
             if (entity is File) {
               final ext = path.extension(entity.path).toLowerCase();
-              if (ext == '.png' || ext == '.jpg' || ext == '.jpeg' || ext == '.bmp') {
+              if (ext == '.png' ||
+                  ext == '.jpg' ||
+                  ext == '.jpeg' ||
+                  ext == '.bmp') {
                 try {
                   final stat = await entity.stat();
-                  images.add(ELImageFile(
-                    path: entity.path,
-                    name: path.basename(entity.path),
-                    lineName: _task.lineConfig!.displayName,
-                    date: date,
-                    shift: shiftName,
-                    timeSlot: timeSlot,
-                    defectType: defectType,
-                    size: stat.size,
-                    modifiedTime: stat.modified,
-                  ));
+                  images.add(
+                    ELImageFile(
+                      path: entity.path,
+                      name: path.basename(entity.path),
+                      lineName: _task.lineConfig!.displayName,
+                      date: date,
+                      shift: shiftName,
+                      timeSlot: timeSlot,
+                      defectType: defectType,
+                      size: stat.size,
+                      modifiedTime: stat.modified,
+                    ),
+                  );
 
                   // 每扫描到10个文件更新一次
                   if (images.length % 10 == 0) {
@@ -376,11 +375,11 @@ class ELCollectionViewModel extends BaseViewModel {
       if (_isCancelled) break;
 
       final image = _task.images[i];
-      
+
       try {
         // 生成目标文件路径（处理重名）
         final targetPath = _generateTargetPath(image.name);
-        
+
         // 复制文件
         await File(image.path).copy(targetPath);
         copiedCount++;
@@ -416,7 +415,7 @@ class ELCollectionViewModel extends BaseViewModel {
   String _generateTargetPath(String fileName) {
     final baseName = path.basenameWithoutExtension(fileName);
     final ext = path.extension(fileName);
-    
+
     String targetPath = path.join(_task.targetDir, fileName);
     int counter = 1;
 
@@ -479,9 +478,9 @@ class ELCollectionViewModel extends BaseViewModel {
     try {
       await _lineConfigService.removeConfig(region, lineName);
       await _loadLineConfigs();
-      
+
       // 如果当前选中的线别被删除，清空选择
-      if (_task.lineConfig?.region == region && 
+      if (_task.lineConfig?.region == region &&
           _task.lineConfig?.lineName == lineName) {
         _task = _task.copyWith(lineConfig: null);
         notifyListeners();
@@ -530,7 +529,7 @@ class ELCollectionViewModel extends BaseViewModel {
     try {
       await _defectTypeService.removeDefectType(folderName);
       await _loadDefectTypes();
-      
+
       // 从已选列表中移除
       if (_task.defectTypes.contains(folderName)) {
         toggleDefectType(folderName);
@@ -541,7 +540,11 @@ class ELCollectionViewModel extends BaseViewModel {
   }
 
   /// 更新脏污类型
-  Future<void> updateDefectType(String oldFolderName, String newName, String newFolderName) async {
+  Future<void> updateDefectType(
+    String oldFolderName,
+    String newName,
+    String newFolderName,
+  ) async {
     try {
       // 验证格式
       if (!DefectTypeService.isValidFolderName(newFolderName)) {
@@ -552,7 +555,7 @@ class ELCollectionViewModel extends BaseViewModel {
       final newType = DefectType(name: newName, folderName: newFolderName);
       await _defectTypeService.updateDefectType(oldFolderName, newType);
       await _loadDefectTypes();
-      
+
       // 更新已选列表
       if (_task.defectTypes.contains(oldFolderName)) {
         final newTypes = List<String>.from(_task.defectTypes);

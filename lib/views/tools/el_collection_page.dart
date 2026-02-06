@@ -89,14 +89,15 @@ class _ELCollectionContentBody extends StatefulWidget {
   const _ELCollectionContentBody();
 
   @override
-  State<_ELCollectionContentBody> createState() => _ELCollectionContentBodyState();
+  State<_ELCollectionContentBody> createState() =>
+      _ELCollectionContentBodyState();
 }
 
 class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ELCollectionViewModel>();
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -114,7 +115,8 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
           const SizedBox(height: 24),
           _buildActionButtons(context, viewModel),
           const SizedBox(height: 24),
-          if (viewModel.isRunning || viewModel.task.images.isNotEmpty || 
+          if (viewModel.isRunning ||
+              viewModel.task.images.isNotEmpty ||
               viewModel.task.status == ELCollectionStatus.completed ||
               viewModel.task.status == ELCollectionStatus.error)
             _buildProgressSection(context, viewModel),
@@ -124,7 +126,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 线别配置区域
-  Widget _buildLineConfigSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildLineConfigSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -155,7 +160,8 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
                 spacing: 8,
                 runSpacing: 8,
                 children: viewModel.lineConfigs.map((config) {
-                  final isSelected = task.lineConfig?.displayName == config.displayName;
+                  final isSelected =
+                      task.lineConfig?.displayName == config.displayName;
                   return ChoiceChip(
                     label: Text(config.displayName),
                     selected: isSelected,
@@ -170,7 +176,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 日期班次区域
-  Widget _buildDateShiftSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildDateShiftSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -237,7 +246,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 时间段区域
-  Widget _buildTimeSlotsSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildTimeSlotsSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -290,7 +302,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 脏污类型区域
-  Widget _buildDefectTypesSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildDefectTypesSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -309,7 +324,8 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
                 Row(
                   children: [
                     TextButton.icon(
-                      onPressed: () => _showDefectTypeManager(context, viewModel),
+                      onPressed: () =>
+                          _showDefectTypeManager(context, viewModel),
                       icon: const Icon(Icons.edit, size: 18),
                       label: const Text('管理'),
                     ),
@@ -333,11 +349,14 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
                 spacing: 8,
                 runSpacing: 8,
                 children: viewModel.defectTypes.map((defect) {
-                  final isSelected = task.defectTypes.contains(defect.folderName);
+                  final isSelected = task.defectTypes.contains(
+                    defect.folderName,
+                  );
                   return FilterChip(
                     label: Text(defect.name),
                     selected: isSelected,
-                    onSelected: (_) => viewModel.toggleDefectType(defect.folderName),
+                    onSelected: (_) =>
+                        viewModel.toggleDefectType(defect.folderName),
                   );
                 }).toList(),
               ),
@@ -348,7 +367,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 目标目录区域
-  Widget _buildTargetDirSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildTargetDirSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -366,7 +388,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       border: Border.all(color: colorScheme.outline),
                       borderRadius: BorderRadius.circular(4),
@@ -374,8 +399,8 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
                     child: Text(
                       task.targetDir.isEmpty ? '未选择' : task.targetDir,
                       style: TextStyle(
-                        color: task.targetDir.isEmpty 
-                            ? colorScheme.outline 
+                        color: task.targetDir.isEmpty
+                            ? colorScheme.outline
                             : colorScheme.onSurface,
                       ),
                       maxLines: 1,
@@ -397,39 +422,52 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 操作按钮
-  Widget _buildActionButtons(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
     return Row(
       children: [
         FilledButton.icon(
-          onPressed: task.canScan && !viewModel.isRunning 
-              ? viewModel.startScan 
+          onPressed: task.canScan && !viewModel.isRunning
+              ? viewModel.startScan
               : null,
           icon: task.status == ELCollectionStatus.scanning
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.search),
-          label: Text(task.status == ELCollectionStatus.scanning ? '扫描中...' : '开始扫描'),
+          label: Text(
+            task.status == ELCollectionStatus.scanning ? '扫描中...' : '开始扫描',
+          ),
           style: FilledButton.styleFrom(backgroundColor: colorScheme.primary),
         ),
         const SizedBox(width: 12),
         FilledButton.icon(
-          onPressed: task.canCopy && !viewModel.isRunning 
-              ? viewModel.startCopy 
+          onPressed: task.canCopy && !viewModel.isRunning
+              ? viewModel.startCopy
               : null,
           icon: task.status == ELCollectionStatus.copying
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.copy),
-          label: Text(task.status == ELCollectionStatus.copying ? '复制中...' : '开始复制'),
+          label: Text(
+            task.status == ELCollectionStatus.copying ? '复制中...' : '开始复制',
+          ),
           style: FilledButton.styleFrom(backgroundColor: colorScheme.secondary),
         ),
         if (viewModel.isRunning) ...[
@@ -442,7 +480,8 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
           ),
         ],
         const Spacer(),
-        if (task.images.isNotEmpty || task.status == ELCollectionStatus.completed)
+        if (task.images.isNotEmpty ||
+            task.status == ELCollectionStatus.completed)
           TextButton.icon(
             onPressed: viewModel.resetTask,
             icon: const Icon(Icons.refresh),
@@ -453,7 +492,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 进度区域
-  Widget _buildProgressSection(BuildContext context, ELCollectionViewModel viewModel) {
+  Widget _buildProgressSection(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
@@ -479,37 +521,46 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // 当前扫描路径
-            if (task.status == ELCollectionStatus.scanning && task.currentScanningPath != null)
+            if (task.status == ELCollectionStatus.scanning &&
+                task.currentScanningPath != null)
               Text(
                 '正在扫描: ${task.currentScanningPath}',
                 style: Theme.of(context).textTheme.bodySmall,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            
+
             // 进度条
             if (task.status == ELCollectionStatus.copying)
               LinearProgressIndicator(value: task.progress),
-            
+
             const SizedBox(height: 16),
-            
+
             // 统计信息
             Wrap(
               spacing: 16,
               runSpacing: 8,
               children: [
                 _StatItem(label: '找到图片', value: '${task.images.length} 张'),
-                if (task.status == ELCollectionStatus.copying || 
+                if (task.status == ELCollectionStatus.copying ||
                     task.status == ELCollectionStatus.completed)
-                  _StatItem(label: '已复制', value: '${task.copiedCount} 张', color: Colors.green),
+                  _StatItem(
+                    label: '已复制',
+                    value: '${task.copiedCount} 张',
+                    color: Colors.green,
+                  ),
                 if (task.failedCount > 0)
-                  _StatItem(label: '失败', value: '${task.failedCount} 张', color: Colors.red),
+                  _StatItem(
+                    label: '失败',
+                    value: '${task.failedCount} 张',
+                    color: Colors.red,
+                  ),
                 _StatItem(label: '总大小', value: task.formattedTotalSize),
               ],
             ),
-            
+
             // 错误信息
             if (task.errorMessage != null)
               Container(
@@ -561,7 +612,9 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('线别配置'),
-        content: const Text('线别配置管理功能将在后续版本完善。\n配置文件位置: config/line_config.json'),
+        content: const Text(
+          '线别配置管理功能将在后续版本完善。\n配置文件位置: config/line_config.json',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -573,7 +626,10 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
   }
 
   /// 显示脏污类型管理对话框
-  void _showDefectTypeManager(BuildContext context, ELCollectionViewModel viewModel) {
+  void _showDefectTypeManager(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) {
     showDialog(
       context: context,
       builder: (context) => _DefectTypeManagerDialog(viewModel: viewModel),
@@ -590,7 +646,7 @@ class _StatusIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     switch (status) {
       case ELCollectionStatus.idle:
         return Icon(Icons.hourglass_empty, color: colorScheme.outline);
@@ -599,7 +655,10 @@ class _StatusIcon extends StatelessWidget {
         return SizedBox(
           width: 24,
           height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: colorScheme.primary,
+          ),
         );
       case ELCollectionStatus.completed:
         return const Icon(Icons.check_circle, color: Colors.green);
@@ -630,11 +689,13 @@ class _StatItem extends StatelessWidget {
         color: itemColor.withAlpha(20),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text('$label: $value', style: TextStyle(color: itemColor, fontWeight: FontWeight.w600)),
+      child: Text(
+        '$label: $value',
+        style: TextStyle(color: itemColor, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }
-
 
 /// 脏污类型管理对话框
 class _DefectTypeManagerDialog extends StatefulWidget {
@@ -643,7 +704,8 @@ class _DefectTypeManagerDialog extends StatefulWidget {
   const _DefectTypeManagerDialog({required this.viewModel});
 
   @override
-  State<_DefectTypeManagerDialog> createState() => _DefectTypeManagerDialogState();
+  State<_DefectTypeManagerDialog> createState() =>
+      _DefectTypeManagerDialogState();
 }
 
 class _DefectTypeManagerDialogState extends State<_DefectTypeManagerDialog> {
@@ -680,10 +742,15 @@ class _DefectTypeManagerDialogState extends State<_DefectTypeManagerDialog> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit, size: 20),
-                          onPressed: () => _showEditDefectTypeDialog(context, defect),
+                          onPressed: () =>
+                              _showEditDefectTypeDialog(context, defect),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete,
+                            size: 20,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _showDeleteConfirm(context, defect),
                         ),
                       ],
@@ -793,9 +860,7 @@ class _DefectTypeManagerDialogState extends State<_DefectTypeManagerDialog> {
             children: [
               TextFormField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: '显示名称',
-                ),
+                decoration: const InputDecoration(labelText: '显示名称'),
                 validator: (v) => v?.isEmpty ?? true ? '请输入名称' : null,
               ),
               const SizedBox(height: 16),
