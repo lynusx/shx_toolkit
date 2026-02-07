@@ -155,18 +155,41 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
             if (viewModel.lineConfigs.isEmpty)
               const Center(child: CircularProgressIndicator())
             else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: viewModel.lineConfigs.map((config) {
-                  final isSelected =
-                      task.lineConfig?.displayName == config.displayName;
-                  return ChoiceChip(
-                    label: Text(config.displayName),
-                    selected: isSelected,
-                    onSelected: (_) => viewModel.setLineConfig(config),
-                  );
-                }).toList(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: viewModel.lineConfigs.map((config) {
+                      final isSelected = task.selectedLineConfigs.any(
+                        (c) =>
+                            c.region == config.region &&
+                            c.lineName == config.lineName,
+                      );
+                      return FilterChip(
+                        label: Text(config.displayName),
+                        selected: isSelected,
+                        onSelected: (_) => viewModel.toggleLineConfig(config),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: viewModel.selectAllLineConfigs,
+                        icon: const Icon(Icons.select_all, size: 18),
+                        label: const Text('全选'),
+                      ),
+                      TextButton.icon(
+                        onPressed: viewModel.clearLineConfigs,
+                        icon: const Icon(Icons.clear_all, size: 18),
+                        label: const Text('清空'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
           ],
         ),

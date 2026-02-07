@@ -133,7 +133,7 @@ class ELImageFile {
 /// EL图片收集任务
 class ELCollectionTask {
   // 配置参数
-  final LineConfig? lineConfig; // 线别配置
+  final List<LineConfig> selectedLineConfigs; // 选中的线别配置列表
   final String date; // 日期（20260205）
   final ShiftType? shift; // 班次
   final List<int> timeSlots; // 时间段列表
@@ -151,7 +151,7 @@ class ELCollectionTask {
   final String? currentScanningPath; // 当前正在扫描的路径
 
   const ELCollectionTask({
-    this.lineConfig,
+    this.selectedLineConfigs = const [],
     this.date = '',
     this.shift,
     this.timeSlots = const [],
@@ -195,13 +195,13 @@ class ELCollectionTask {
   }
 
   /// 是否可以开始扫描
-  bool get canScan => lineConfig != null && date.isNotEmpty;
+  bool get canScan => selectedLineConfigs.isNotEmpty && date.isNotEmpty;
 
   /// 是否可以开始复制
   bool get canCopy => images.isNotEmpty && targetDir.isNotEmpty;
 
   ELCollectionTask copyWith({
-    LineConfig? lineConfig,
+    List<LineConfig>? selectedLineConfigs,
     String? date,
     ShiftType? shift,
     List<int>? timeSlots,
@@ -217,7 +217,7 @@ class ELCollectionTask {
     String? currentScanningPath,
   }) {
     return ELCollectionTask(
-      lineConfig: lineConfig ?? this.lineConfig,
+      selectedLineConfigs: selectedLineConfigs ?? this.selectedLineConfigs,
       date: date ?? this.date,
       shift: shift ?? this.shift,
       timeSlots: timeSlots ?? this.timeSlots,

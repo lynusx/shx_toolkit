@@ -83,9 +83,30 @@ class ELCollectionViewModel extends BaseViewModel {
 
   // ==================== 配置设置 ====================
 
-  /// 设置线别
-  void setLineConfig(LineConfig? config) {
-    _task = _task.copyWith(lineConfig: config);
+  /// 切换线别选择
+  void toggleLineConfig(LineConfig config) {
+    final currentConfigs = List<LineConfig>.from(_task.selectedLineConfigs);
+    final existingIndex = currentConfigs.indexWhere(
+      (c) => c.region == config.region && c.lineName == config.lineName,
+    );
+    if (existingIndex >= 0) {
+      currentConfigs.removeAt(existingIndex);
+    } else {
+      currentConfigs.add(config);
+    }
+    _task = _task.copyWith(selectedLineConfigs: currentConfigs);
+    notifyListeners();
+  }
+
+  /// 全选线别
+  void selectAllLineConfigs() {
+    _task = _task.copyWith(selectedLineConfigs: List.from(_lineConfigs));
+    notifyListeners();
+  }
+
+  /// 清空线别选择
+  void clearLineConfigs() {
+    _task = _task.copyWith(selectedLineConfigs: []);
     notifyListeners();
   }
 
@@ -189,7 +210,7 @@ class ELCollectionViewModel extends BaseViewModel {
 
   /// 开始扫描
   Future<void> startScan() async {
-    if (_task.lineConfig == null) {
+    if (_task.selectedLineConfigs.isEmpty) {
       setError('请选择线别');
       return;
     }
@@ -242,78 +263,85 @@ class ELCollectionViewModel extends BaseViewModel {
     notifyListeners();
 
     final List<ELImageFile> images = [];
-    final basePath = _task.lineConfig!.basePath;
     final date = _task.date;
     final shiftName = _task.shift!.displayName;
 
-    // 构建扫描路径列表
-    for (final timeSlot in _task.timeSlots) {
-      for (final defectType in _task.defectTypes) {
-        // 构建完整路径: \\ip\SaveImages\A-01-B\20260205\夜班\21\NG_脏污_B
-        final scanPath = path.join(
-          basePath,
-          date,
-          shiftName,
-          timeSlot.toString(),
-          defectType,
-        );
+    // 遍历所有选中的线别
+    for (final lineConfig in _task.selectedLineConfigs) {
+      if (_isCancelled) break;
 
-        if (_isCancelled) break;
+      final basePath = lineConfig.basePath;
 
-        _task = _task.copyWith(currentScanningPath: scanPath);
-        notifyListeners();
+      // 构建扫描路径列表
+      for (final timeSlot in _task.timeSlots) {
+        for (final defectType in _task.defectTypes) {
+          // 构建完整路径: \\ip\SaveImages\A-01-B\20260205\夜班\21\NG_脏污_B
+          final scanPath = path.join(
+            basePath,
+            date,
+            shiftName,
+            timeSlot.toString(),
+            defectType,
+          );
 
-        // 检查目录是否存在（剪枝）
-        final dir = Directory(scanPath);
-        if (!await dir.exists()) {
-          // 目录不存在，直接剪枝
-          continue;
-        }
+          if (_isCancelled) break;
 
-        // 扫描目录中的图片文件
-        try {
-          await for (final entity in dir.list(followLinks: false)) {
-            if (_isCancelled) break;
+          _task = _task.copyWith(currentScanningPath: scanPath);
+          notifyListeners();
 
-            if (entity is File) {
-              final ext = path.extension(entity.path).toLowerCase();
-              if (ext == '.png' ||
-                  ext == '.jpg' ||
-                  ext == '.jpeg' ||
-                  ext == '.bmp') {
-                try {
-                  final stat = await entity.stat();
-                  images.add(
-                    ELImageFile(
-                      path: entity.path,
-                      name: path.basename(entity.path),
-                      lineName: _task.lineConfig!.displayName,
-                      date: date,
-                      shift: shiftName,
-                      timeSlot: timeSlot,
-                      defectType: defectType,
-                      size: stat.size,
-                      modifiedTime: stat.modified,
-                    ),
-                  );
+          // 检查目录是否存在（剪枝）
+          final dir = Directory(scanPath);
+          if (!await dir.exists()) {
+            // 目录不存在，直接剪枝
+            continue;
+          }
 
-                  // 每扫描到10个文件更新一次
-                  if (images.length % 10 == 0) {
-                    _task = _task.copyWith(images: List.unmodifiable(images));
-                    notifyListeners();
+          // 扫描目录中的图片文件
+          try {
+            await for (final entity in dir.list(followLinks: false)) {
+              if (_isCancelled) break;
+
+              if (entity is File) {
+                final ext = path.extension(entity.path).toLowerCase();
+                if (ext == '.png' ||
+                    ext == '.jpg' ||
+                    ext == '.jpeg' ||
+                    ext == '.bmp') {
+                  try {
+                    final stat = await entity.stat();
+                    images.add(
+                      ELImageFile(
+                        path: entity.path,
+                        name: path.basename(entity.path),
+                        lineName: lineConfig.displayName,
+                        date: date,
+                        shift: shiftName,
+                        timeSlot: timeSlot,
+                        defectType: defectType,
+                        size: stat.size,
+                        modifiedTime: stat.modified,
+                      ),
+                    );
+
+                    // 每扫描到10个文件更新一次
+                    if (images.length % 10 == 0) {
+                      _task = _task.copyWith(images: List.unmodifiable(images));
+                      notifyListeners();
+                    }
+                  } catch (e) {
+                    // 忽略无法访问的文件
                   }
-                } catch (e) {
-                  // 忽略无法访问的文件
                 }
               }
             }
-          }
-        } catch (e) {
-          // 目录访问失败，继续下一个
-          if (kDebugMode) {
-            print('访问目录失败: $scanPath, 错误: $e');
+          } catch (e) {
+            // 目录访问失败，继续下一个
+            if (kDebugMode) {
+              print('访问目录失败: $scanPath, 错误: $e');
+            }
           }
         }
+        if (_isCancelled) break;
       }
       if (_isCancelled) break;
     }
@@ -441,7 +469,7 @@ class ELCollectionViewModel extends BaseViewModel {
     _isCancelled = false;
     _initDefaultValues();
     _task = _task.copyWith(
-      lineConfig: null,
+      selectedLineConfigs: [],
       targetDir: '',
       status: ELCollectionStatus.idle,
       images: [],
@@ -479,10 +507,13 @@ class ELCollectionViewModel extends BaseViewModel {
       await _lineConfigService.removeConfig(region, lineName);
       await _loadLineConfigs();
 
-      // 如果当前选中的线别被删除，清空选择
-      if (_task.lineConfig?.region == region &&
-          _task.lineConfig?.lineName == lineName) {
-        _task = _task.copyWith(lineConfig: null);
+      // 如果当前选中的线别被删除，从选中列表中移除
+      final updatedConfigs = _task.selectedLineConfigs.where((config) {
+        return !(config.region == region && config.lineName == lineName);
+      }).toList();
+
+      if (updatedConfigs.length != _task.selectedLineConfigs.length) {
+        _task = _task.copyWith(selectedLineConfigs: updatedConfigs);
         notifyListeners();
       }
     } catch (e) {
