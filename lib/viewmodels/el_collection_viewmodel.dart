@@ -263,6 +263,7 @@ class ELCollectionViewModel extends BaseViewModel {
     notifyListeners();
 
     final List<ELImageFile> images = [];
+    final List<String> skippedPaths = []; // 记录跳过的路径
     final date = _task.date;
     final shiftName = _task.shift!.displayName;
 
@@ -289,9 +290,21 @@ class ELCollectionViewModel extends BaseViewModel {
           _task = _task.copyWith(currentScanningPath: scanPath);
           notifyListeners();
 
-          // 检查目录是否存在（剪枝）
+          // 检查目录是否存在（剪枝）- 捕获网络异常
           final dir = Directory(scanPath);
-          if (!await dir.exists()) {
+          bool exists = false;
+          try {
+            exists = await dir.exists();
+          } catch (e) {
+            // IP访问异常，记录并跳过
+            skippedPaths.add(scanPath);
+            if (kDebugMode) {
+              print('访问异常，跳过: $scanPath, 错误: $e');
+            }
+            continue;
+          }
+
+          if (!exists) {
             // 目录不存在，直接剪枝
             continue;
           }
@@ -335,7 +348,8 @@ class ELCollectionViewModel extends BaseViewModel {
               }
             }
           } catch (e) {
-            // 目录访问失败，继续下一个
+            // 目录访问失败（权限/网络等），记录并继续下一个
+            skippedPaths.add(scanPath);
             if (kDebugMode) {
               print('访问目录失败: $scanPath, 错误: $e');
             }
@@ -347,6 +361,11 @@ class ELCollectionViewModel extends BaseViewModel {
     }
 
     if (!_isCancelled) {
+      // 如果有跳过的路径，显示提示信息
+      if (skippedPaths.isNotEmpty && images.isEmpty) {
+        setError('部分路径访问失败，已跳过。建议检查网络连接或IP配置。');
+      }
+
       _task = _task.copyWith(
         status: ELCollectionStatus.idle,
         images: List.unmodifiable(images),
