@@ -124,7 +124,7 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
     );
   }
 
-  /// 线别配置区域 - 下拉选择，东西区互斥
+  /// 线别配置区域 - 下拉分组多选，东西区互斥
   Widget _buildLineConfigSection(
     BuildContext context,
     ELCollectionViewModel viewModel,
@@ -132,22 +132,18 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
-    // 获取所有区域
-    final regions = viewModel.lineConfigs.map((c) => c.region).toSet().toList()
-      ..sort();
+    // 按区域分组线别
+    final regionGroups = <String, List<LineConfig>>{};
+    for (final config in viewModel.lineConfigs) {
+      regionGroups.putIfAbsent(config.region, () => []).add(config);
+    }
+    final regions = regionGroups.keys.toList()..sort();
 
-    // 获取当前选中的区域（从已选线别中推断）
+    // 获取当前选中的区域
     String? selectedRegion;
     if (task.selectedLineConfigs.isNotEmpty) {
       selectedRegion = task.selectedLineConfigs.first.region;
     }
-
-    // 获取当前区域下的线别
-    final currentRegionLines = selectedRegion != null
-        ? viewModel.lineConfigs
-              .where((c) => c.region == selectedRegion)
-              .toList()
-        : <LineConfig>[];
 
     return Card(
       elevation: 0,
@@ -175,86 +171,31 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 区域选择下拉框
-                  DropdownButtonFormField<String>(
-                    value: selectedRegion,
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      labelText: '选择区域',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    hint: const Text('请选择区域'),
-                    items: regions.map((region) {
-                      return DropdownMenuItem(
-                        value: region,
-                        child: Text(region),
-                      );
-                    }).toList(),
-                    onChanged: (region) {
-                      if (region != null) {
-                        // 切换区域时，清空之前的线别选择（东西区互斥）
-                        viewModel.clearLineConfigs();
-                        // 自动全选当前区域的所有线别
-                        final regionConfigs = viewModel.lineConfigs
-                            .where((c) => c.region == region)
-                            .toList();
-                        for (final config in regionConfigs) {
-                          viewModel.toggleLineConfig(config);
-                        }
-                      }
-                    },
+                  // 线别多选下拉框（分组显示）
+                  _buildMultiSelectDropdown(
+                    context,
+                    viewModel,
+                    regionGroups,
+                    regions,
+                    selectedRegion,
+                    task.selectedLineConfigs,
                   ),
-                  const SizedBox(height: 12),
-                  // 线别多选下拉框
-                  if (selectedRegion != null) ...[
-                    InkWell(
-                      onTap: () => _showLineMultiSelectDialog(
-                        context,
-                        viewModel,
-                        currentRegionLines,
-                        task.selectedLineConfigs,
-                      ),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: '选择线别',
-                          border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          suffixIcon: Icon(Icons.arrow_drop_down),
-                        ),
-                        child: task.selectedLineConfigs.isEmpty
-                            ? const Text(
-                                '请选择线别',
-                                style: TextStyle(color: Colors.grey),
-                              )
-                            : Text(
-                                '已选择 ${task.selectedLineConfigs.length} 个线别',
-                              ),
-                      ),
+                  const SizedBox(height: 8),
+                  // 显示已选线别
+                  if (task.selectedLineConfigs.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: task.selectedLineConfigs.map((config) {
+                        return Chip(
+                          label: Text('${config.region}-${config.lineName}'),
+                          deleteIcon: const Icon(Icons.close, size: 18),
+                          onDeleted: () => viewModel.toggleLineConfig(config),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        );
+                      }).toList(),
                     ),
-                    const SizedBox(height: 8),
-                    // 显示已选线别
-                    if (task.selectedLineConfigs.isNotEmpty)
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: task.selectedLineConfigs.map((config) {
-                          return Chip(
-                            label: Text(config.lineName),
-                            deleteIcon: const Icon(Icons.close, size: 18),
-                            onDeleted: () => viewModel.toggleLineConfig(config),
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          );
-                        }).toList(),
-                      ),
-                  ],
                 ],
               ),
           ],
@@ -263,53 +204,102 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
     );
   }
 
-  /// 显示线别多选对话框
-  void _showLineMultiSelectDialog(
+  /// 分组多选下拉框
+  Widget _buildMultiSelectDropdown(
     BuildContext context,
     ELCollectionViewModel viewModel,
-    List<LineConfig> availableLines,
+    Map<String, List<LineConfig>> regionGroups,
+    List<String> regions,
+    String? selectedRegion,
     List<LineConfig> selectedLines,
   ) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('选择线别'),
-              content: SizedBox(
-                width: 300,
-                height: 300,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: availableLines.map((line) {
-                      final isSelected = selectedLines.any(
-                        (c) =>
-                            c.region == line.region &&
-                            c.lineName == line.lineName,
-                      );
-                      return CheckboxListTile(
-                        title: Text(line.lineName),
-                        value: isSelected,
-                        onChanged: (checked) {
-                          viewModel.toggleLineConfig(line);
-                          setState(() {});
-                        },
-                      );
-                    }).toList(),
-                  ),
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 40),
+      constraints: const BoxConstraints(minWidth: 300, maxWidth: 300),
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: '选择线别',
+          hintText: '请选择线别',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          suffixIcon: Icon(Icons.arrow_drop_down),
+        ),
+        child: selectedLines.isEmpty
+            ? const Text('请选择线别', style: TextStyle(color: Colors.grey))
+            : Text('已选择 ${selectedLines.length} 个线别'),
+      ),
+      itemBuilder: (context) {
+        return [
+          // 分组菜单项
+          for (final region in regions) ...[
+            // 区域标题（不可点击）
+            PopupMenuItem<String>(
+              enabled: false,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              height: 32,
+              child: Text(
+                region,
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('完成'),
+            ),
+            // 该区域下的线别
+            ...regionGroups[region]!.map((line) {
+              final isSelected = selectedLines.any(
+                (c) => c.region == line.region && c.lineName == line.lineName,
+              );
+              // 如果不是当前选中区域且已选其他区域，则禁用
+              final isDisabled =
+                  selectedRegion != null && selectedRegion != line.region;
+
+              return PopupMenuItem<String>(
+                value: '${line.region}-${line.lineName}',
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                height: 40,
+                onTap: isDisabled
+                    ? null
+                    : () {
+                        // 如果切换区域，先清空之前的选择（东西区互斥）
+                        if (selectedRegion != null &&
+                            selectedRegion != line.region) {
+                          viewModel.clearLineConfigs();
+                        }
+                        viewModel.toggleLineConfig(line);
+                      },
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: isDisabled
+                          ? null
+                          : (_) {
+                              // 如果切换区域，先清空之前的选择
+                              if (selectedRegion != null &&
+                                  selectedRegion != line.region) {
+                                viewModel.clearLineConfigs();
+                              }
+                              viewModel.toggleLineConfig(line);
+                              // 关闭菜单，用户需要重新打开查看更新状态
+                              Navigator.of(context).pop();
+                            },
+                    ),
+                    Expanded(
+                      child: Text(
+                        line.lineName,
+                        style: TextStyle(
+                          color: isDisabled ? Colors.grey : null,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            );
-          },
-        );
+              );
+            }),
+          ],
+        ];
       },
     );
   }
