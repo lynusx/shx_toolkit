@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/router/app_router.dart';
-import '../../core/services/defect_type_service.dart';
 import '../../models/el_collection_task.dart';
 import '../../viewmodels/el_collection_viewmodel.dart';
 
@@ -804,13 +803,9 @@ class _DefectTypeManagerDialogState extends State<_DefectTypeManagerDialog> {
                 decoration: const InputDecoration(
                   labelText: '文件夹名称',
                   hintText: '如：NG_脏污_B',
-                  helperText: '格式：NG_xxx_A/B',
                 ),
                 validator: (v) {
                   if (v?.isEmpty ?? true) return '请输入文件夹名称';
-                  if (!DefectTypeService.isValidFolderName(v!)) {
-                    return '格式不正确，应为 NG_xxx_A/B';
-                  }
                   return null;
                 },
               ),
@@ -866,15 +861,9 @@ class _DefectTypeManagerDialogState extends State<_DefectTypeManagerDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: folderController,
-                decoration: const InputDecoration(
-                  labelText: '文件夹名称',
-                  helperText: '格式：NG_xxx_A/B',
-                ),
+                decoration: const InputDecoration(labelText: '文件夹名称'),
                 validator: (v) {
                   if (v?.isEmpty ?? true) return '请输入文件夹名称';
-                  if (!DefectTypeService.isValidFolderName(v!)) {
-                    return '格式不正确，应为 NG_xxx_A/B';
-                  }
                   return null;
                 },
               ),

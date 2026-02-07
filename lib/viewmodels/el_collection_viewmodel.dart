@@ -510,12 +510,6 @@ class ELCollectionViewModel extends BaseViewModel {
   /// 添加脏污类型
   Future<void> addDefectType(String name, String folderName) async {
     try {
-      // 验证格式
-      if (!DefectTypeService.isValidFolderName(folderName)) {
-        setError('文件夹名称格式不正确，应为 NG_xxx_A/B 格式');
-        return;
-      }
-
       final defectType = DefectType(name: name, folderName: folderName);
       await _defectTypeService.addDefectType(defectType);
       await _loadDefectTypes();
@@ -546,12 +540,6 @@ class ELCollectionViewModel extends BaseViewModel {
     String newFolderName,
   ) async {
     try {
-      // 验证格式
-      if (!DefectTypeService.isValidFolderName(newFolderName)) {
-        setError('文件夹名称格式不正确，应为 NG_xxx_A/B 格式');
-        return;
-      }
-
       final newType = DefectType(name: newName, folderName: newFolderName);
       await _defectTypeService.updateDefectType(oldFolderName, newType);
       await _loadDefectTypes();
