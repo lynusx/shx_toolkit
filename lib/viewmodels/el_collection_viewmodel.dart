@@ -276,6 +276,7 @@ class ELCollectionViewModel extends BaseViewModel {
     notifyListeners();
 
     final List<ELImageFile> images = [];
+    final List<String> scanErrors = []; // 收集扫描错误
     final date = _task.date;
     final shiftName = _task.shift!.displayName;
 
@@ -302,9 +303,24 @@ class ELCollectionViewModel extends BaseViewModel {
           _task = _task.copyWith(currentScanningPath: scanPath);
           notifyListeners();
 
-          // 检查目录是否存在（剪枝）
+          // 检查目录是否存在（剪枝）- 包裹在try-catch中防止网络路径错误
           final dir = Directory(scanPath);
-          if (!await dir.exists()) {
+          bool dirExists = false;
+          try {
+            dirExists = await dir.exists();
+          } catch (e) {
+            // 网络路径访问失败，记录错误但继续执行
+            final errorMsg = '无法访问路径: $scanPath';
+            if (!scanErrors.contains(errorMsg)) {
+              scanErrors.add(errorMsg);
+            }
+            if (kDebugMode) {
+              print('$errorMsg, 错误: $e');
+            }
+            continue;
+          }
+
+          if (!dirExists) {
             // 目录不存在，直接剪枝
             continue;
           }
@@ -343,14 +359,21 @@ class ELCollectionViewModel extends BaseViewModel {
                     }
                   } catch (e) {
                     // 忽略无法访问的文件
+                    if (kDebugMode) {
+                      print('无法读取文件: ${entity.path}, 错误: $e');
+                    }
                   }
                 }
               }
             }
           } catch (e) {
-            // 目录访问失败，继续下一个
+            // 目录访问失败，记录错误但继续下一个
+            final errorMsg = '访问目录失败: $scanPath';
+            if (!scanErrors.contains(errorMsg)) {
+              scanErrors.add(errorMsg);
+            }
             if (kDebugMode) {
-              print('访问目录失败: $scanPath, 错误: $e');
+              print('$errorMsg, 错误: $e');
             }
           }
         }
@@ -359,11 +382,26 @@ class ELCollectionViewModel extends BaseViewModel {
     }
 
     if (!_isCancelled) {
+      // 如果有错误，构建错误信息
+      String? finalErrorMessage;
+      if (scanErrors.isNotEmpty && images.isEmpty) {
+        // 只有错误且没有扫描到图片时，显示错误
+        finalErrorMessage = scanErrors.length == 1
+            ? scanErrors.first
+            : '扫描过程中遇到 ${scanErrors.length} 个错误:\n${scanErrors.take(3).join('\n')}${scanErrors.length > 3 ? '\n...' : ''}';
+      }
+
       _task = _task.copyWith(
-        status: ELCollectionStatus.idle,
+        status: finalErrorMessage != null ? ELCollectionStatus.error : ELCollectionStatus.idle,
         images: List.unmodifiable(images),
         currentScanningPath: null,
+        errorMessage: finalErrorMessage,
       );
+      
+      if (finalErrorMessage != null) {
+        setError(finalErrorMessage);
+      }
+      
       notifyListeners();
     }
   }
@@ -410,6 +448,7 @@ class ELCollectionViewModel extends BaseViewModel {
 
     int copiedCount = 0;
     int failedCount = 0;
+    final List<String> copyErrors = []; // 收集复制错误
 
     for (int i = 0; i < _task.images.length; i++) {
       if (_isCancelled) break;
@@ -425,6 +464,8 @@ class ELCollectionViewModel extends BaseViewModel {
         copiedCount++;
       } catch (e) {
         failedCount++;
+        final errorMsg = '${image.name}: $e';
+        copyErrors.add(errorMsg);
         if (kDebugMode) {
           print('复制文件失败: ${image.path}, 错误: $e');
         }
@@ -441,12 +482,28 @@ class ELCollectionViewModel extends BaseViewModel {
     }
 
     if (!_isCancelled) {
+      // 构建完成状态的错误信息（如果有失败的话）
+      String? finalErrorMessage;
+      if (failedCount > 0) {
+        finalErrorMessage = '复制完成: $copiedCount 个成功, $failedCount 个失败';
+        if (copyErrors.isNotEmpty) {
+          finalErrorMessage += '\n\n失败详情:\n${copyErrors.take(3).join('\n')}${copyErrors.length > 3 ? '\n...等 ${copyErrors.length} 个错误' : ''}';
+        }
+      }
+
       _task = _task.copyWith(
         status: ELCollectionStatus.completed,
         copiedCount: copiedCount,
         failedCount: failedCount,
         endTime: DateTime.now(),
+        errorMessage: finalErrorMessage,
       );
+      
+      if (finalErrorMessage != null && failedCount > copiedCount) {
+        // 如果失败数量超过成功数量，显示警告
+        setError(finalErrorMessage);
+      }
+      
       notifyListeners();
     }
   }
