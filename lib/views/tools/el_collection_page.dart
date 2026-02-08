@@ -204,7 +204,7 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
           ],
         ),
       ),
