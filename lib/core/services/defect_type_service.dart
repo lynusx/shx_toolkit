@@ -15,14 +15,8 @@ class DefectTypeService {
 
   // 默认配置
   static const List<Map<String, String>> _defaultConfig = [
-    {'name': '脏污', 'folderName': 'NG_脏污_B'},
-    {'name': '划伤', 'folderName': 'NG_划伤_B'},
-    {'name': '断删', 'folderName': 'NG_断删_A'},
-    {'name': '隐裂', 'folderName': 'NG_隐裂_A'},
-    {'name': '虚焊', 'folderName': 'NG_虚焊_A'},
-    {'name': '异物', 'folderName': 'NG_异物_B'},
-    {'name': '崩边', 'folderName': 'NG_崩边_B'},
-    {'name': '色差', 'folderName': 'NG_色差_A'},
+    {'name': '脏污B', 'folderName': 'NG_脏污_B'},
+    {'name': '脏污C', 'folderName': 'NG_脏污_C'},
   ];
 
   // 配置缓存
@@ -159,9 +153,8 @@ class DefectTypeService {
 
   /// 验证文件夹名称格式
   static bool isValidFolderName(String folderName) {
-    // 验证格式：NG_xxx_A/B
-    final pattern = RegExp(r'^NG_[\u4e00-\u9fa5_a-zA-Z0-9]+_[AB]$');
-    return pattern.hasMatch(folderName);
+    // 无格式限制，仅检查非空
+    return folderName.isNotEmpty;
   }
 
   /// 生成建议的文件夹名称
