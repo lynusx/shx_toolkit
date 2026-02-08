@@ -90,12 +90,8 @@ class DefectType {
 
   /// 默认脏污类型列表
   static const List<DefectType> defaults = [
-    DefectType(name: '脏污', folderName: 'NG_脏污_B'),
-    DefectType(name: '划伤', folderName: 'NG_划伤_B'),
-    DefectType(name: '断删', folderName: 'NG_断删_A'),
-    DefectType(name: '隐裂', folderName: 'NG_隐裂_A'),
-    DefectType(name: '虚焊', folderName: 'NG_虚焊_A'),
-    DefectType(name: '异物', folderName: 'NG_异物_B'),
+    DefectType(name: '脏污B', folderName: 'NG_脏污_B'),
+    DefectType(name: '脏污C', folderName: 'NG_脏污_C'),
   ];
 }
 
