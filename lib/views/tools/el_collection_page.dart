@@ -132,6 +132,15 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
     final colorScheme = Theme.of(context).colorScheme;
     final task = viewModel.task;
 
+    // 按区域分组线别
+    final Map<String, List<LineConfig>> groupedConfigs = {};
+    for (final config in viewModel.lineConfigs) {
+      if (!groupedConfigs.containsKey(config.region)) {
+        groupedConfigs[config.region] = [];
+      }
+      groupedConfigs[config.region]!.add(config);
+    }
+
     return Card(
       elevation: 0,
       color: colorScheme.surface,
@@ -144,10 +153,19 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('线别配置', style: Theme.of(context).textTheme.titleMedium),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined, size: 20),
-                  onPressed: () => _showLineConfigDialog(context),
-                  tooltip: '编辑配置',
+                Row(
+                  children: [
+                    if (task.lineConfigs.isNotEmpty)
+                      TextButton(
+                        onPressed: viewModel.clearLineConfigs,
+                        child: const Text('清空'),
+                      ),
+                    IconButton(
+                      icon: const Icon(Icons.settings_outlined, size: 20),
+                      onPressed: () => _showLineConfigDialog(context),
+                      tooltip: '编辑配置',
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -155,19 +173,38 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
             if (viewModel.lineConfigs.isEmpty)
               const Center(child: CircularProgressIndicator())
             else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: viewModel.lineConfigs.map((config) {
-                  final isSelected =
-                      task.lineConfig?.displayName == config.displayName;
-                  return ChoiceChip(
-                    label: Text(config.displayName),
-                    selected: isSelected,
-                    onSelected: (_) => viewModel.setLineConfig(config),
-                  );
-                }).toList(),
-              ),
+              ...groupedConfigs.entries.map((entry) {
+                final region = entry.key;
+                final configs = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        region,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: configs.map((config) {
+                          final isSelected = viewModel.isLineConfigSelected(config);
+                          return FilterChip(
+                            label: Text(config.lineName),
+                            selected: isSelected,
+                            onSelected: (_) => viewModel.toggleLineConfig(config),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
           ],
         ),
       ),

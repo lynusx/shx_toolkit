@@ -83,10 +83,44 @@ class ELCollectionViewModel extends BaseViewModel {
 
   // ==================== 配置设置 ====================
 
-  /// 设置线别
-  void setLineConfig(LineConfig? config) {
-    _task = _task.copyWith(lineConfig: config);
+  /// 切换线别选择（支持多选，东西区互斥）
+  void toggleLineConfig(LineConfig config) {
+    final currentConfigs = List<LineConfig>.from(_task.lineConfigs);
+    final configIndex = currentConfigs.indexWhere(
+      (c) => c.region == config.region && c.lineName == config.lineName,
+    );
+
+    if (configIndex >= 0) {
+      // 如果已选中，则取消选择
+      currentConfigs.removeAt(configIndex);
+    } else {
+      // 如果未选中，先检查是否选择了不同区域的线别
+      if (currentConfigs.isNotEmpty) {
+        final firstRegion = currentConfigs.first.region;
+        if (firstRegion != config.region) {
+          // 选择了不同区域，清空当前选择
+          currentConfigs.clear();
+        }
+      }
+      // 添加新选择的线别
+      currentConfigs.add(config);
+    }
+
+    _task = _task.copyWith(lineConfigs: currentConfigs);
     notifyListeners();
+  }
+
+  /// 清空线别选择
+  void clearLineConfigs() {
+    _task = _task.copyWith(lineConfigs: []);
+    notifyListeners();
+  }
+
+  /// 检查线别是否已选中
+  bool isLineConfigSelected(LineConfig config) {
+    return _task.lineConfigs.any(
+      (c) => c.region == config.region && c.lineName == config.lineName,
+    );
   }
 
   /// 设置日期
@@ -189,8 +223,8 @@ class ELCollectionViewModel extends BaseViewModel {
 
   /// 开始扫描
   Future<void> startScan() async {
-    if (_task.lineConfig == null) {
-      setError('请选择线别');
+    if (_task.lineConfigs.isEmpty) {
+      setError('请至少选择一个线别');
       return;
     }
     if (_task.date.isEmpty) {
@@ -242,76 +276,82 @@ class ELCollectionViewModel extends BaseViewModel {
     notifyListeners();
 
     final List<ELImageFile> images = [];
-    final basePath = _task.lineConfig!.basePath;
     final date = _task.date;
     final shiftName = _task.shift!.displayName;
 
-    // 构建扫描路径列表
-    for (final timeSlot in _task.timeSlots) {
-      for (final defectType in _task.defectTypes) {
-        // 构建完整路径: \\ip\SaveImages\A-01-B\20260205\夜班\21\NG_脏污_B
-        final scanPath = path.join(
-          basePath,
-          date,
-          shiftName,
-          timeSlot.toString(),
-          defectType,
-        );
+    // 遍历所有选中的线别
+    for (final lineConfig in _task.lineConfigs) {
+      if (_isCancelled) break;
 
-        if (_isCancelled) break;
+      final basePath = lineConfig.basePath;
 
-        _task = _task.copyWith(currentScanningPath: scanPath);
-        notifyListeners();
+      // 构建扫描路径列表
+      for (final timeSlot in _task.timeSlots) {
+        for (final defectType in _task.defectTypes) {
+          // 构建完整路径: \\ip\SaveImages\A-01-B\20260205\夜班\21\NG_脏污_B
+          final scanPath = path.join(
+            basePath,
+            date,
+            shiftName,
+            timeSlot.toString(),
+            defectType,
+          );
 
-        // 检查目录是否存在（剪枝）
-        final dir = Directory(scanPath);
-        if (!await dir.exists()) {
-          // 目录不存在，直接剪枝
-          continue;
-        }
+          if (_isCancelled) break;
 
-        // 扫描目录中的图片文件
-        try {
-          await for (final entity in dir.list(followLinks: false)) {
-            if (_isCancelled) break;
+          _task = _task.copyWith(currentScanningPath: scanPath);
+          notifyListeners();
 
-            if (entity is File) {
-              final ext = path.extension(entity.path).toLowerCase();
-              if (ext == '.png' ||
-                  ext == '.jpg' ||
-                  ext == '.jpeg' ||
-                  ext == '.bmp') {
-                try {
-                  final stat = await entity.stat();
-                  images.add(
-                    ELImageFile(
-                      path: entity.path,
-                      name: path.basename(entity.path),
-                      lineName: _task.lineConfig!.displayName,
-                      date: date,
-                      shift: shiftName,
-                      timeSlot: timeSlot,
-                      defectType: defectType,
-                      size: stat.size,
-                      modifiedTime: stat.modified,
-                    ),
-                  );
+          // 检查目录是否存在（剪枝）
+          final dir = Directory(scanPath);
+          if (!await dir.exists()) {
+            // 目录不存在，直接剪枝
+            continue;
+          }
 
-                  // 每扫描到10个文件更新一次
-                  if (images.length % 10 == 0) {
-                    _task = _task.copyWith(images: List.unmodifiable(images));
-                    notifyListeners();
+          // 扫描目录中的图片文件
+          try {
+            await for (final entity in dir.list(followLinks: false)) {
+              if (_isCancelled) break;
+
+              if (entity is File) {
+                final ext = path.extension(entity.path).toLowerCase();
+                if (ext == '.png' ||
+                    ext == '.jpg' ||
+                    ext == '.jpeg' ||
+                    ext == '.bmp') {
+                  try {
+                    final stat = await entity.stat();
+                    images.add(
+                      ELImageFile(
+                        path: entity.path,
+                        name: path.basename(entity.path),
+                        lineName: lineConfig.displayName,
+                        date: date,
+                        shift: shiftName,
+                        timeSlot: timeSlot,
+                        defectType: defectType,
+                        size: stat.size,
+                        modifiedTime: stat.modified,
+                      ),
+                    );
+
+                    // 每扫描到10个文件更新一次
+                    if (images.length % 10 == 0) {
+                      _task = _task.copyWith(images: List.unmodifiable(images));
+                      notifyListeners();
+                    }
+                  } catch (e) {
+                    // 忽略无法访问的文件
                   }
-                } catch (e) {
-                  // 忽略无法访问的文件
                 }
               }
             }
-          }
-        } catch (e) {
-          // 目录访问失败，继续下一个
-          if (kDebugMode) {
-            print('访问目录失败: $scanPath, 错误: $e');
+          } catch (e) {
+            // 目录访问失败，继续下一个
+            if (kDebugMode) {
+              print('访问目录失败: $scanPath, 错误: $e');
+            }
           }
         }
       }
@@ -441,7 +481,7 @@ class ELCollectionViewModel extends BaseViewModel {
     _isCancelled = false;
     _initDefaultValues();
     _task = _task.copyWith(
-      lineConfig: null,
+      lineConfigs: [],
       targetDir: '',
       status: ELCollectionStatus.idle,
       images: [],
@@ -479,12 +519,12 @@ class ELCollectionViewModel extends BaseViewModel {
       await _lineConfigService.removeConfig(region, lineName);
       await _loadLineConfigs();
 
-      // 如果当前选中的线别被删除，清空选择
-      if (_task.lineConfig?.region == region &&
-          _task.lineConfig?.lineName == lineName) {
-        _task = _task.copyWith(lineConfig: null);
-        notifyListeners();
-      }
+      // 如果当前选中的线别被删除，从选择列表中移除
+      final updatedConfigs = _task.lineConfigs.where(
+        (c) => !(c.region == region && c.lineName == lineName),
+      ).toList();
+      _task = _task.copyWith(lineConfigs: updatedConfigs);
+      notifyListeners();
     } catch (e) {
       setError('删除线别配置失败: $e');
     }
