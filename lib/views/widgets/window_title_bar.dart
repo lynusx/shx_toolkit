@@ -12,23 +12,19 @@ import 'package:flutter/material.dart';
 class WindowTitleBar extends StatelessWidget {
   final String title;
   final bool isMaximized;
-  final bool isAlwaysOnTop;
   final VoidCallback onMinimize;
   final VoidCallback onMaximize;
   final VoidCallback onClose;
   final VoidCallback onStartDrag;
-  final VoidCallback? onToggleAlwaysOnTop;
 
   const WindowTitleBar({
     super.key,
     required this.title,
     required this.isMaximized,
-    required this.isAlwaysOnTop,
     required this.onMinimize,
     required this.onMaximize,
     required this.onClose,
     required this.onStartDrag,
-    this.onToggleAlwaysOnTop,
   });
 
   /// 是否为 macOS 平台
@@ -78,17 +74,6 @@ class WindowTitleBar extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Spacer(),
-                    // 置顶指示器（非 macOS 显示在标题区域）
-                    if (!_isMacOS && isAlwaysOnTop)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Icon(
-                          Icons.push_pin,
-                          size: 16,
-                          color: colorScheme.primary,
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -96,15 +81,13 @@ class WindowTitleBar extends StatelessWidget {
           ),
 
           // 窗口控制按钮（右侧）
-          // macOS: 隐藏默认控制按钮，只显示置顶按钮
+          // macOS: 隐藏默认控制按钮
           // Windows/Linux: 显示完整控制按钮
           _WindowControlButtons(
             isMaximized: isMaximized,
-            isAlwaysOnTop: isAlwaysOnTop,
             onMinimize: onMinimize,
             onMaximize: onMaximize,
             onClose: onClose,
-            onToggleAlwaysOnTop: onToggleAlwaysOnTop,
             isMacOS: _isMacOS,
           ),
         ],
@@ -116,20 +99,16 @@ class WindowTitleBar extends StatelessWidget {
 /// 窗口控制按钮组
 class _WindowControlButtons extends StatelessWidget {
   final bool isMaximized;
-  final bool isAlwaysOnTop;
   final VoidCallback onMinimize;
   final VoidCallback onMaximize;
   final VoidCallback onClose;
-  final VoidCallback? onToggleAlwaysOnTop;
   final bool isMacOS;
 
   const _WindowControlButtons({
     required this.isMaximized,
-    required this.isAlwaysOnTop,
     required this.onMinimize,
     required this.onMaximize,
     required this.onClose,
-    this.onToggleAlwaysOnTop,
     required this.isMacOS,
   });
 
@@ -137,36 +116,15 @@ class _WindowControlButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // macOS: 只显示置顶按钮（系统自带关闭/最小化/最大化按钮）
+    // macOS: 不显示控制按钮（系统自带关闭/最小化/最大化按钮）
     if (isMacOS) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 置顶按钮
-          _WindowButton(
-            icon: isAlwaysOnTop ? Icons.push_pin : Icons.push_pin_outlined,
-            tooltip: isAlwaysOnTop ? '取消置顶' : '置顶窗口',
-            onPressed: onToggleAlwaysOnTop,
-            iconSize: 16,
-            iconColor: isAlwaysOnTop ? colorScheme.primary : null,
-          ),
-          const SizedBox(width: 8), // 右侧留一点间距
-        ],
-      );
+      return const SizedBox(width: 8); // 右侧留一点间距
     }
 
     // Windows/Linux: 显示完整控制按钮
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 置顶按钮
-        _WindowButton(
-          icon: isAlwaysOnTop ? Icons.push_pin : Icons.push_pin_outlined,
-          tooltip: isAlwaysOnTop ? '取消置顶' : '置顶窗口',
-          onPressed: onToggleAlwaysOnTop,
-          iconSize: 16,
-          iconColor: isAlwaysOnTop ? colorScheme.primary : null,
-        ),
         // 最小化
         _WindowButton(
           icon: Icons.remove,

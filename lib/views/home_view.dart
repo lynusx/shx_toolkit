@@ -47,12 +47,10 @@ class _HomeViewContent extends StatelessWidget {
           WindowTitleBar(
             title: AppConstants.appName,
             isMaximized: viewModel.isMaximized,
-            isAlwaysOnTop: viewModel.isAlwaysOnTop,
             onMinimize: viewModel.minimizeWindow,
             onMaximize: viewModel.toggleMaximize,
             onClose: viewModel.closeWindow,
             onStartDrag: viewModel.startDragging,
-            onToggleAlwaysOnTop: viewModel.toggleAlwaysOnTop,
           ),
           // 主内容区
           Expanded(
