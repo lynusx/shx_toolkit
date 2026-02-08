@@ -246,6 +246,10 @@ class ELCollectionViewModel extends BaseViewModel {
 
     _isCancelled = false;
     clearError();
+    
+    // 清除任务中的错误信息，避免显示上一次的错误
+    _task = _task.copyWith(errorMessage: null);
+    notifyListeners();
 
     try {
       await _scanImages();
