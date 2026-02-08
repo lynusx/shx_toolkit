@@ -233,14 +233,59 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: '日期',
-                      hintText: '20260205',
-                      prefixIcon: Icon(Icons.calendar_today),
+                  child: InkWell(
+                    onTap: () => _showDatePicker(context, viewModel),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: colorScheme.outline),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '日期',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  task.date.isEmpty
+                                      ? '请选择日期'
+                                      : _formatDateForDisplay(task.date),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: task.date.isEmpty
+                                        ? colorScheme.outline
+                                        : colorScheme.onSurface,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ],
+                      ),
                     ),
-                    controller: TextEditingController(text: task.date),
-                    onChanged: viewModel.setDate,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -279,6 +324,73 @@ class _ELCollectionContentBodyState extends State<_ELCollectionContentBody> {
         ),
       ),
     );
+  }
+
+  /// 显示日期选择器
+  Future<void> _showDatePicker(
+    BuildContext context,
+    ELCollectionViewModel viewModel,
+  ) async {
+    final now = DateTime.now();
+    
+    // 解析当前选中的日期，默认为今天
+    DateTime initialDate;
+    try {
+      if (viewModel.task.date.isNotEmpty && viewModel.task.date.length == 8) {
+        final year = int.parse(viewModel.task.date.substring(0, 4));
+        final month = int.parse(viewModel.task.date.substring(4, 6));
+        final day = int.parse(viewModel.task.date.substring(6, 8));
+        initialDate = DateTime(year, month, day);
+      } else {
+        initialDate = now;
+      }
+    } catch (_) {
+      initialDate = now;
+    }
+
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 1),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogTheme: DialogTheme(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selectedDate != null) {
+      final formattedDate =
+          '${selectedDate.year}${_twoDigits(selectedDate.month)}${_twoDigits(selectedDate.day)}';
+      viewModel.setDate(formattedDate);
+    }
+  }
+
+  /// 将日期格式化为显示格式 (yyyyMMdd -> yyyy年MM月dd日)
+  String _formatDateForDisplay(String dateStr) {
+    if (dateStr.length != 8) return dateStr;
+    try {
+      final year = dateStr.substring(0, 4);
+      final month = dateStr.substring(4, 6);
+      final day = dateStr.substring(6, 8);
+      return '$year年$month月$day日';
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  /// 数字补零
+  String _twoDigits(int n) {
+    if (n >= 10) return '$n';
+    return '0$n';
   }
 
   /// 时间段区域
